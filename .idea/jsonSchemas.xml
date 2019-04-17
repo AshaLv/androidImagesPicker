@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="dtd1">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="dtd1" />
+              <option name="relativePathToSchema" value="http://schemas.android.com/apk/res/android" />
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="dtd2">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="dtd2" />
+              <option name="relativePathToSchema" value="http://schemas.android.com/apk/res-auto" />
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>
