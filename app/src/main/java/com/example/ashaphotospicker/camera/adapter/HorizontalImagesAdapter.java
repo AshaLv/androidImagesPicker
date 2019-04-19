@@ -4,14 +4,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +28,7 @@ import com.example.ashaphotospicker.camera.GlideApp;
 import com.example.ashaphotospicker.camera.HorizontalImagesActivity;
 import com.example.ashaphotospicker.camera.MyGlideApp;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 import com.squareup.picasso.Transformation;
 
 
@@ -49,7 +54,8 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.sliding_images, parent, false);
-        return new ViewHolder(view);
+        RelativeLayout slidingImageRoot = (RelativeLayout) view;
+        return new ViewHolder(view,slidingImageRoot);
     }
 
     @Override
@@ -67,13 +73,27 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
                 .error(R.mipmap.ic_launcher) //if error
                 .into(holder.image);
 
-        holder.image.setOnClickListener(new View.OnClickListener() {
+//        final Bitmap bitmap_=((BitmapDrawable)holder.image.getDrawable()).getBitmap();
+
+        holder.image.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                activity.recordPoint();
-                activity.showBottomModal();
+            public boolean onTouch(View view, MotionEvent event) {
+                Log.d(TAG,"onTouch to sliding image");
+                if (event.getAction() == event.ACTION_UP){
+                    float x = event.getX();
+                    float y = event.getY();
+                    activity.recordPoint(x,y,holder.image,images.get(position),holder.slidingImagesRoot);
+                    activity.showBottomModal();
+                }else{
+
+                }
+
+                return true;
             }
         });
+
+
+
     }
 
     @Override
@@ -84,11 +104,13 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
-        public ImageView image;
+        private ImageView image;
+        private RelativeLayout slidingImagesRoot;
 
-        public ViewHolder(View itemView) {
+        public ViewHolder(View itemView, RelativeLayout slidingImagesRoot) {
             super(itemView);
-            image = itemView.findViewById(R.id.slidingImage);
+            this.image = itemView.findViewById(R.id.slidingImage);
+            this.slidingImagesRoot = slidingImagesRoot;
         }
     }
 
