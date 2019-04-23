@@ -11,6 +11,7 @@
         android:id="@+id/slidingImage"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
+        android:layout_centerVertical="true"
         android:adjustViewBounds="true"
         android:layout_margin="1dp"
         />

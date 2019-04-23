@@ -47,6 +47,7 @@ import com.example.ashaphotospicker.AshaFactory.RelativeLayoutParamsFac;
 import com.example.ashaphotospicker.AshaFactory.ToolbarLayoutParamsFac;
 import com.example.ashaphotospicker.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
@@ -59,6 +60,7 @@ import com.example.ashaphotospicker.camera.bean.HorizontalImagesWithTags;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.LinkedTreeMap;
+import com.squareup.picasso.Picasso;
 
 
 public class HorizontalImagesActivity extends AppCompatActivity {
@@ -90,6 +92,9 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     private final Gson gson = new Gson();
     private final Gson gsonBuilder = new GsonBuilder().create();
+
+    private final int usedWidthNumber = 145235425;
+    private final int usedHeightNumber = 145435425;
 
     @Override
     protected void onResume() {
@@ -480,6 +485,65 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         });
     }
 
+    public void cutTheImage(int realImageWidth, int realImageHeight, File imageFile, final ImageView imageview, final int position, final RelativeLayout slidingImagesRoot) {
+
+        Log.d(TAG,"get real image width: " + String.valueOf(realImageWidth));
+        Log.d(TAG,"get real image height: " + String.valueOf(realImageHeight));
+        Log.d(TAG, "horizontalSlidingImages's width is: " + horizontalImagesScreenRecycleView.getWidth());
+        Log.d(TAG, "horizontalSlidingImages's height is: " + horizontalImagesScreenRecycleView.getHeight());
+        Log.d(TAG, "root's width is: " + root.getWidth());
+        Log.d(TAG, "root's height is: " + root.getHeight());
+
+        final float recycleViewWidthToHeightRatio = horizontalImagesScreenRecycleView.getWidth() / horizontalImagesScreenRecycleView.getHeight();
+        final float realImageWidthToHeightRatio = realImageWidth / realImageHeight;
+
+        float usedWidth;
+        float usedHeight;
+
+        if(realImageWidthToHeightRatio < recycleViewWidthToHeightRatio) {
+            // 如果实际图片宽高比小于屏幕提供显示图片的宽高比，则说明图片高度过高，直接将其截成1：1
+            Log.d(TAG,"如果实际图片宽高比小于屏幕提供显示图片的宽高比，则说明图片高度过高，直接将其截成1：1");
+            usedWidth = horizontalImagesScreenRecycleView.getWidth();
+            usedHeight = usedWidth;
+
+        } else {
+            // 这种情况就是屏幕提供的内容区可以将该图片显示完整
+            Log.d(TAG, "这种情况就是屏幕提供的内容区可以将该图片显示完整");
+            usedWidth = horizontalImagesScreenRecycleView.getWidth();
+            usedHeight = usedWidth / realImageWidthToHeightRatio;
+        }
+        final HorizontalImagesActivity this_ = this;
+
+        imageview.setTag(usedWidthNumber,usedWidth);
+        imageview.setTag(usedHeightNumber,usedWidth);
+
+        Picasso.with(this)
+                .load(imageFile)
+                .placeholder(R.mipmap.ic_launcher) // optional
+                .resize((int)usedWidth, (int)usedHeight)
+                .error(R.mipmap.ic_launcher) //if error
+                .into(imageview);
+
+        imageview.setOnTouchListener(new View.OnTouchListener() {
+            float x2 = 0;
+            float y2 = 0;
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_UP:
+                        x2 = event.getX();
+                        y2 = event.getY();
+                        this_.recordPoint(x2,y2,imageview,horizontalImages.get(position),slidingImagesRoot);
+                        this_.showBottomModal();
+                        break;
+                    default: break;
+                }
+                return true;
+            }
+        });
+
+    }
+
     public void setProductResultText(String text) {
         productResult.setText(text);
     }
@@ -547,8 +611,11 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             //为"标签"TextView加拖动事件，仅允许在当前ImageView的四维界限活动
 
                 //拿到当前图片的最大x坐标和最大y坐标
-                final float currentImageMaxX = currentHolderImageView.getX() + currentHolderImageView.getWidth();
-                final float currentImageMaxY = currentHolderImageView.getY() + currentHolderImageView.getHeight();
+
+                final float currentImageMinX = currentHolderImageView.getX();
+                final float currentImageMinY = (slidingImageRoot.getHeight() - (float)currentHolderImageView.getTag(usedHeightNumber)) / 2;
+                final float currentImageMaxX = currentImageMinX + currentHolderImageView.getWidth();
+                final float currentImageMaxY = currentImageMinY + (float)currentHolderImageView.getTag(usedHeightNumber);
 
                 //加拖动监听
                 relativeLayout.setOnTouchListener(new View.OnTouchListener() {
@@ -567,7 +634,8 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                         }
                     }
                 });
-                slidingImageRoot.setOnDragListener(new View.OnDragListener() {
+
+                currentHolderImageView.setOnDragListener(new View.OnDragListener() {
                     @Override
                     public boolean onDrag(View v, DragEvent event) {
                         int action = event.getAction();
@@ -604,10 +672,29 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                             case DragEvent.ACTION_DROP:
 
                                 View vw = (View) event.getLocalState();
+
+                                Log.d("11111","1111");
+
+                                Log.d("event.getX",String.valueOf(event.getX() + relativeLayout.getWidth()));
+                                Log.d("currentImageMaxX",String.valueOf(currentImageMaxX));
+                                Log.d("event.getY",String.valueOf(event.getY() + relativeLayout.getHeight()));
+                                Log.d("currentImageMaxY",String.valueOf(currentImageMaxY));
+                                Log.d("currentImageMinX",String.valueOf(currentImageMinX));
+                                Log.d("currentImageMinY",String.valueOf(currentImageMinY));
+                                Log.d("slidingImageRoot",String.valueOf(slidingImageRoot.getWidth()));
+                                Log.d("slidingImageRoot",String.valueOf(slidingImageRoot.getHeight()));
+                                Log.d("horizontalImages",String.valueOf(horizontalImagesScreenRecycleView.getWidth()));
+                                Log.d("horizontalImages",String.valueOf(horizontalImagesScreenRecycleView.getHeight()));
+                                Log.d("relativeLayout",String.valueOf(relativeLayout.getWidth()));
+                                Log.d("relativeLayout",String.valueOf(relativeLayout.getHeight()));
+                                Log.d("getIntrinsicHeight",String.valueOf(currentHolderImageView.getDrawable().getIntrinsicHeight()));
+
+                                Log.d("11111","1111");
+
                                 if((event.getX() + relativeLayout.getWidth()) < currentImageMaxX &&
-                                        event.getX() >= 0 &&
+                                        event.getX() >= currentImageMinX &&
                                         (event.getY() + relativeLayout.getHeight())  < currentImageMaxY &&
-                                        event.getY() >= 0) {
+                                        event.getY() >= currentImageMinY) {
                                     // Gets the item containing the dragged data
                                     ClipData.Item item = event.getClipData().getItemAt(0);
                                     // Gets the text data from the item.

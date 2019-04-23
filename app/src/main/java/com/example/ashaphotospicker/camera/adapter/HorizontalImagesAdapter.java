@@ -3,6 +3,7 @@ package com.example.ashaphotospicker.camera.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -63,37 +64,17 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-        File f = new File(images.get(position));
+        final File imageFile = new File(images.get(position));
 
-        Picasso.with(mContext)
-                .load(f)
-                .placeholder(R.mipmap.ic_launcher) // optional
-                .fit()
-                .centerCrop()
-                .error(R.mipmap.ic_launcher) //if error
-                .into(holder.image);
-
-        holder.image.setOnTouchListener(new View.OnTouchListener() {
-            float x2 = 0;
-            float y2 = 0;
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                switch(event.getAction()) {
-                    case MotionEvent.ACTION_UP:
-                        x2 = event.getX();
-                        y2 = event.getY();
-                        activity.recordPoint(x2,y2,holder.image,images.get(position),holder.slidingImagesRoot);
-                        activity.showBottomModal();
-                        break;
-                    default: break;
-                }
-                return true;
-            }
-        });
-
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+        final int realImageWidth = options.outWidth;
+        final int realImageHeight = options.outHeight;
         holder.image.post(new Runnable() {
             @Override
             public void run() {
+                activity.cutTheImage(realImageWidth,realImageHeight,imageFile,holder.image,position,holder.slidingImagesRoot);
                 activity.displayCachedTagsInsideImage(holder.image,images.get(position),holder.slidingImagesRoot);
             }
         });
