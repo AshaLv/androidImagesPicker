@@ -181,9 +181,26 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             horizontalImagesWithTags.put(imagePath,foo);
         }
         final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-        Log.d(TAG,"updateImagesTagCacheData: " + horizontalImagesWithTags);
         editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
         editor.commit();
+    }
+
+    private void updateImagesTagCacheDataAfterDrag(String imagePath, float x, float y, String text) {
+        if(horizontalImagesWithTags.get(imagePath) != null) {
+            String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(imagePath));
+            HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
+            for(int i=0; i<foo.tagNames.size(); i++) {
+                if(foo.tagNames.get(i).equals(text) ) {
+                    foo.tagPoints.set(i*2,x);
+                    foo.tagPoints.set(i*2+1,y);
+                    break;
+                }
+            }
+            horizontalImagesWithTags.put(imagePath,foo);
+            final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
+            editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+            editor.commit();
+        }
     }
 
     private void deleteImagesTagCacheData(String imagePath, String text) {
@@ -192,22 +209,14 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
             for(int i=0; i<foo.tagNames.size(); i++) {
                 if(foo.tagNames.get(i).equals(text) ) {
-                    Log.d(TAG,"delete brandNames: " + foo.tagNames);
-                    Log.d(TAG,"delete brandNames: " + foo.tagPoints);
-                    Log.d(TAG,"delete brandNames: " + String.valueOf(i));
-                    Log.d(TAG,"delete brandNames: " + String.valueOf(i*2));
-                    Log.d(TAG,"delete brandNames: " + String.valueOf(i*2 + 1));
                     foo.tagNames.remove(i);
                     foo.tagPoints.remove(i*2);
                     foo.tagPoints.remove(i*2); // 因为移除第一个后，第二个的位置就降下跟x坐标一样了，不这样写就会报溢出错误了
-                    Log.d(TAG,"delete brandNames: " + foo.tagNames);
-                    Log.d(TAG,"delete brandNames: " + foo.tagPoints);
                     break;
                 }
             }
             horizontalImagesWithTags.put(imagePath,foo);
             final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-            Log.d(TAG,"delete brandNames: " + horizontalImagesWithTags);
             editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
             editor.commit();
         }
@@ -216,7 +225,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
     private void finalUpdateImagesTagCacheData() {
         final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
         editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
-        Log.d(TAG,"gsonBuilder.toJson(ImagesWithTags) " + gsonBuilder.toJson(horizontalImagesWithTags));
         editor.commit();
     }
 
@@ -541,7 +549,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 //拿到当前图片的最大x坐标和最大y坐标
                 final float currentImageMaxX = currentHolderImageView.getX() + currentHolderImageView.getWidth();
                 final float currentImageMaxY = currentHolderImageView.getY() + currentHolderImageView.getHeight();
-                relativeLayout.setBackgroundColor(Color.BLACK);
+
                 //加拖动监听
                 relativeLayout.setOnTouchListener(new View.OnTouchListener() {
                     @Override
@@ -614,6 +622,8 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                                     params.leftMargin = (int) event.getX();
                                     params.topMargin = (int) event.getY();
                                     vw.setLayoutParams(params);
+
+                                    updateImagesTagCacheDataAfterDrag(currentHolderImagePath,event.getX()/currentHolderImageView.getWidth(),event.getY()/currentHolderImageView.getHeight(), brandResultText);
 
                                 }
                                 vw.setVisibility(View.VISIBLE);//finally set Visibility to VISIBLE
