@@ -110,10 +110,8 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
                     if(resultList != null && resultList.size() >0){
                         // Notify success
                         Intent intent = new Intent(MultiImageSelectorActivity.this, HorizontalImagesActivity.class);
-//                        intent.putStringArrayListExtra(EXTRA_RESULT, resultList);
                         Gson gsonBuilder = new GsonBuilder().create();
                         editor.putString("imagesPath", gsonBuilder.toJson(resultList));
-                        Log.d(TAG,"gsonBuilder.toJson(resultList) " + gsonBuilder.toJson(resultList));
                         editor.commit();
                         startActivity(intent);
                         return;
@@ -164,15 +162,6 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
                 getString(R.string.mis_action_done), size, mDefaultCount));
     }
 
-//    @Override
-//    public void onSingleImageSelected(String path) {
-//        Intent data = new Intent();
-//        resultList.add(path);
-//        data.putStringArrayListExtra(EXTRA_RESULT, resultList);
-//        setResult(RESULT_OK, data);
-//        finish();
-//    }
-
     @Override
     public void onImageSelected(String path) {
         if(!resultList.contains(path)) {
@@ -188,21 +177,6 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
         }
         updateDoneText(resultList);
     }
-
-//    @Override
-//    public void onCameraShot(File imageFile) {
-//        if(imageFile != null) {
-//            // notify system the image has change
-//            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageFile)));
-//
-//            Intent data = new Intent();
-//            resultList.add(imageFile.getAbsolutePath());
-//            data.putStringArrayListExtra(EXTRA_RESULT, resultList);
-//            setResult(RESULT_OK, data);
-//            finish();
-//        }
-//    }
-
 
 
 }

@@ -78,7 +78,6 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
             float y2 = 0;
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                Log.d(TAG,"onTouch to sliding image");
                 switch(event.getAction()) {
                     case MotionEvent.ACTION_UP:
                         x2 = event.getX();

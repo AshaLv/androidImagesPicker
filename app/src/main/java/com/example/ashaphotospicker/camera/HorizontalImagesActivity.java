@@ -88,6 +88,9 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     private final int nextStepButtonId = 42423;
 
+    private final Gson gson = new Gson();
+    private final Gson gsonBuilder = new GsonBuilder().create();
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -95,25 +98,19 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             if(this.horizontalImages.size() > 0) {
                 this.horizontalImages.clear();
             }
-            Gson gson = new Gson();
             ArrayList<String> horizontalImages_ = gson.fromJson(multiImageSelectorActivityImagesPathCacheSharedPreferences.getString("imagesPath",""), ArrayList.class);
             this.horizontalImages.addAll(horizontalImages_);
             this.horizontalImagesAdapter.notifyDataSetChanged();
             Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + horizontalImages);
         }
-
-
     }
 
     public void displayCachedTagsInsideImage(ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
         if(multiImageSelectorActivityImagesWithTagsSharedPreferences.contains("ImagesWithTags") && multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags","").length() > 0) {
-            Gson gson = new Gson();
-            Log.d(TAG,"111111 " + multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags",""));
             horizontalImagesWithTags = gson.fromJson(multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags",""), Hashtable.class);
 
             if(horizontalImagesWithTags.get(currentHolderImagePath) != null) {
                 String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(currentHolderImagePath));
-                Log.d(TAG,"66666 " + HorizontalImagesWithTagsToString);
                 HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
                 ArrayList<String> tagNames = foo.tagNames;
                 ArrayList<Float> tagPoints = foo.tagPoints;
@@ -121,13 +118,12 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 this.currentHolderImagePath = currentHolderImagePath;
                 this.slidingImageRoot = slidingImageRoot;
                 for(int j=0; j<tagNames.size(); j++) {
-                    x = tagPoints.get(j*2);
-                    y = tagPoints.get(j*2+1);
+                    x = tagPoints.get(j*2) * currentHolderImageView.getWidth();
+                    y = tagPoints.get(j*2+1) * currentHolderImageView.getHeight();
                     putResultTextOntoCurrentImage(tagNames.get(j));
                 }
 
             }
-
             Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + horizontalImagesWithTags);
         }
     }
@@ -165,10 +161,12 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     private void updateImagesTagCacheData(String imagePath, String text, float x, float y, String url) {
         if(horizontalImagesWithTags.get(imagePath) != null) {
-            HorizontalImagesWithTags foo = horizontalImagesWithTags.get(imagePath);
+            String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(imagePath));
+            HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
             foo.tagNames.add(text);
             foo.tagPoints.add(x);
             foo.tagPoints.add(y);
+            horizontalImagesWithTags.put(imagePath,foo);
         }else {
             ArrayList<String> tagNames = new ArrayList<>();
             ArrayList<Float> tagPoints = new ArrayList<>();
@@ -176,37 +174,51 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             tagPoints.add(x);
             tagPoints.add(y);
             HorizontalImagesWithTags foo = new HorizontalImagesWithTags(
-                    imagePath,
+                    "",
                     tagNames,
                     tagPoints
             );
             horizontalImagesWithTags.put(imagePath,foo);
         }
+        final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
+        Log.d(TAG,"updateImagesTagCacheData: " + horizontalImagesWithTags);
+        editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+        editor.commit();
     }
 
     private void deleteImagesTagCacheData(String imagePath, String text) {
         if(horizontalImagesWithTags.get(imagePath) != null) {
-            HorizontalImagesWithTags foo = horizontalImagesWithTags.get(imagePath);
+            String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(imagePath));
+            HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
             for(int i=0; i<foo.tagNames.size(); i++) {
-                if(foo.tagNames.get(i) == text) {
+                if(foo.tagNames.get(i).equals(text) ) {
+                    Log.d(TAG,"delete brandNames: " + foo.tagNames);
+                    Log.d(TAG,"delete brandNames: " + foo.tagPoints);
+                    Log.d(TAG,"delete brandNames: " + String.valueOf(i));
+                    Log.d(TAG,"delete brandNames: " + String.valueOf(i*2));
+                    Log.d(TAG,"delete brandNames: " + String.valueOf(i*2 + 1));
                     foo.tagNames.remove(i);
                     foo.tagPoints.remove(i*2);
-                    foo.tagPoints.remove(i*2 + 1);
+                    foo.tagPoints.remove(i*2); // 因为移除第一个后，第二个的位置就降下跟x坐标一样了，不这样写就会报溢出错误了
+                    Log.d(TAG,"delete brandNames: " + foo.tagNames);
+                    Log.d(TAG,"delete brandNames: " + foo.tagPoints);
                     break;
                 }
             }
+            horizontalImagesWithTags.put(imagePath,foo);
+            final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
+            Log.d(TAG,"delete brandNames: " + horizontalImagesWithTags);
+            editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+            editor.commit();
         }
     }
 
     private void finalUpdateImagesTagCacheData() {
         final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-        Gson gsonBuilder = new GsonBuilder().create();
         editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
         Log.d(TAG,"gsonBuilder.toJson(ImagesWithTags) " + gsonBuilder.toJson(horizontalImagesWithTags));
         editor.commit();
     }
-
-
 
     private void goToStoryOfPostUgc() {
         Intent intent = new Intent();
@@ -262,7 +274,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
     }
 
     public void recordPoint(float x, float y, ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
-        Log.d(TAG,"recording the position information now");
         this.x = x;
         this.y = y;
         this.currentHolderImageView = currentHolderImageView;
@@ -425,7 +436,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         cancelText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"cancel text clicked");
                 dismissBottomModal();
             }
         });
@@ -435,7 +445,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         saveText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"save text clicked");
                 setProductResultText("商品结果");
                 setBrandResultText("品牌结果");
                 String brandResultText = (String) brandResult.getText();
@@ -450,7 +459,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         addProductText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"addProduct text clicked");
             }
         });
     }
@@ -459,7 +467,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         addBrandText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"addBrand text clicked");
+
             }
         });
     }
@@ -472,21 +480,19 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         brandResult.setText(text);
     }
 
-    private void putResultTextOntoCurrentImage(String brandResultText) {
-
-//        Bitmap mutableBitmap = currentImageBitmap.copy(Bitmap.Config.ARGB_8888, true);
-//        Canvas canvas = new Canvas(mutableBitmap);
-//        Paint paint = new Paint();
-//        paint.setColor(Color.BLACK);
-//        paint.setTextSize(10);
-//        canvas.drawText(productResult.getText().toString(),x,y,paint);
-
+    private void putResultTextOntoCurrentImage(final String brandResultText) {
 
         //在当前的ImageView下创造一个"标签"TextView,然后将这个"标签"TextView写在指定的图片位置
         int randomInt = (int )(Math. random() * 1444450 + 1); // 足够大保证不重复
         if(brandResultText != "") {
             final RelativeLayout relativeLayout = new RelativeLayout(this);
             RelativeLayout.LayoutParams params1 = new RelativeLayoutParamsFac().createDoubleContent();
+            if(currentHolderImageView.getWidth() - x < 300) {
+                x = x - 300;
+            }
+            if(currentHolderImageView.getHeight() - y < 300) {
+                y = y - 300;
+            }
             params1.leftMargin = (int) x;
             params1.topMargin = (int) y;
             relativeLayout.setLayoutParams(params1);
@@ -516,10 +522,11 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             deleteText1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.d(TAG,"here to delete brand name");
-                    slidingImageRoot.removeView(deleteText1);
-                    slidingImageRoot.removeView(tagBrandText);
-                    deleteImagesTagCacheData(currentHolderImagePath,(String) tagBrandText.getText());
+                    //加监听的时候不能直接用上面的数据,不知道为什么,就先调取parent吧
+                    RelativeLayout relativeLayout = (RelativeLayout) v.getParent();
+                    RelativeLayout slidingImageRoot = (RelativeLayout) relativeLayout.getParent();
+                    deleteImagesTagCacheData(currentHolderImagePath,brandResultText);
+                    slidingImageRoot.removeView(relativeLayout);
                 }
             });
 
@@ -539,7 +546,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 relativeLayout.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent e) {
-                        Log.d(TAG,"onTouch");
                         if (e.getAction() == MotionEvent.ACTION_DOWN) {
                             ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
                             String[] mimeTypes = {ClipDescription.MIMETYPE_TEXT_PLAIN};
@@ -590,17 +596,10 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                             case DragEvent.ACTION_DROP:
 
                                 View vw = (View) event.getLocalState();
-                                Log.e("1", String.valueOf(event.getX() + relativeLayout.getWidth()));
-                                Log.e("2", String.valueOf(currentImageMaxX));
-                                Log.e("3", String.valueOf(event.getY() + relativeLayout.getHeight()));
-                                Log.e("4", String.valueOf(currentImageMaxY));
-                                Log.e("5", String.valueOf(event.getX()));
-                                Log.e("6", String.valueOf(event.getY()));
                                 if((event.getX() + relativeLayout.getWidth()) < currentImageMaxX &&
                                         event.getX() >= 0 &&
                                         (event.getY() + relativeLayout.getHeight())  < currentImageMaxY &&
                                         event.getY() >= 0) {
-                                    Log.e(" DragEvent.ACTION_DROP", "drop now and fit the standard");
                                     // Gets the item containing the dragged data
                                     ClipData.Item item = event.getClipData().getItemAt(0);
                                     // Gets the text data from the item.
@@ -619,13 +618,11 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                                 }
                                 vw.setVisibility(View.VISIBLE);//finally set Visibility to VISIBLE
                                 // Returns true. DragEvent.getResult() will return true.
-                                Log.e(" DragEvent.ACTION_DROP", "drop now");
                                 return true;
                             case DragEvent.ACTION_DRAG_ENDED:
                                 return true;
                             // An unknown action type was received.
                             default:
-                                Log.e("DragDrop Example", "Unknown action type received by OnDragListener.");
                                 break;
                         }
                         return true;
