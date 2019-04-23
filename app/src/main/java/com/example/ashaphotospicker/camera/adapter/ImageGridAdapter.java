@@ -3,6 +3,7 @@ package com.example.ashaphotospicker.camera.adapter;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -95,6 +96,7 @@ public class ImageGridAdapter extends BaseAdapter {
             }
         }
         if(mSelectedImages.size() > 0){
+            Log.d("888888","indicator:42342");
             notifyDataSetChanged();
         }
     }
@@ -118,6 +120,7 @@ public class ImageGridAdapter extends BaseAdapter {
         mSelectedImages.clear();
 
         if(images != null && images.size()>0){
+            Log.d("333344354355345","indicator:42342");
             mImages = images;
         }else{
             mImages.clear();
@@ -151,6 +154,7 @@ public class ImageGridAdapter extends BaseAdapter {
             }
             return mImages.get(i-1);
         }else{
+            Log.d("33333","indicator:42342");
             return mImages.get(i);
         }
     }
@@ -202,6 +206,9 @@ public class ImageGridAdapter extends BaseAdapter {
             // 处理单选和多选状态
             if(showSelectIndicator){
                 indicator.setVisibility(View.VISIBLE);
+                indicator.setTag("indicator" + data.path);
+                Log.d("iiii","indicator: " + data.path);
+                mask.setTag("mask" + data.path);
                 if(mSelectedImages.contains(data)){
                     // 设置选中状态
                     indicator.setImageResource(R.drawable.mis_btn_selected);

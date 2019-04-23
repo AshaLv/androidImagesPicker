@@ -9,11 +9,13 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -60,11 +62,9 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        Log.d(TAG, "onBindViewHolder: called.");
-        Log.d(TAG, String.valueOf(position));
-        Log.d(TAG, images.get(position));
 
         File f = new File(images.get(position));
+
         Picasso.with(mContext)
                 .load(f)
                 .placeholder(R.mipmap.ic_launcher) // optional
@@ -73,26 +73,31 @@ public class HorizontalImagesAdapter extends RecyclerView.Adapter<HorizontalImag
                 .error(R.mipmap.ic_launcher) //if error
                 .into(holder.image);
 
-//        final Bitmap bitmap_=((BitmapDrawable)holder.image.getDrawable()).getBitmap();
-
         holder.image.setOnTouchListener(new View.OnTouchListener() {
+            float x2 = 0;
+            float y2 = 0;
             @Override
             public boolean onTouch(View view, MotionEvent event) {
                 Log.d(TAG,"onTouch to sliding image");
-                if (event.getAction() == event.ACTION_UP){
-                    float x = event.getX();
-                    float y = event.getY();
-                    activity.recordPoint(x,y,holder.image,images.get(position),holder.slidingImagesRoot);
-                    activity.showBottomModal();
-                }else{
-
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_UP:
+                        x2 = event.getX();
+                        y2 = event.getY();
+                        activity.recordPoint(x2,y2,holder.image,images.get(position),holder.slidingImagesRoot);
+                        activity.showBottomModal();
+                        break;
+                    default: break;
                 }
-
                 return true;
             }
         });
 
-
+        holder.image.post(new Runnable() {
+            @Override
+            public void run() {
+                activity.displayCachedTagsInsideImage(holder.image,images.get(position),holder.slidingImagesRoot);
+            }
+        });
 
     }
 

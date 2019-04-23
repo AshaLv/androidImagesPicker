@@ -1,6 +1,7 @@
 package com.example.ashaphotospicker.camera;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -9,19 +10,27 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
 
 import com.example.ashaphotospicker.R;
 import com.example.ashaphotospicker.camera.HorizontalImagesActivity;
+import com.example.ashaphotospicker.camera.adapter.ImageGridAdapter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 
 public class MultiImageSelectorActivity extends AppCompatActivity implements MultiImageSelectorFragment.Callback {
-
+    private static final String TAG = "MultiImageSelector";
     // Single choice
     public static final int MODE_SINGLE = 0;
     // Multi choice
@@ -44,11 +53,32 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
     private Button mSubmitButton;
     private int mDefaultCount = DEFAULT_IMAGE_SIZE;
 
+    private SharedPreferences sharedPreferences;
+    private FrameLayout root;
+
+    public ArrayList<String> getImagesPathFromCache() {
+        if(sharedPreferences.contains("imagesPath") && sharedPreferences.getString("imagesPath","").length() > 0) {
+            resultList.clear();
+            Gson gson = new Gson();
+            ArrayList resultList_ = gson.fromJson(sharedPreferences.getString("imagesPath",""), ArrayList.class);
+            resultList.addAll(resultList_);
+            Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + resultList);
+            updateDoneText(resultList);
+        } else {
+            resultList = new ArrayList<>();
+        }
+        return resultList;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedPreferences = getSharedPreferences("multiImageSelectorActivityImagesPathCache", MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
         setTheme(R.style.MIS_NO_ACTIONBAR);
         setContentView(R.layout.multi_photo_screen);
+
+        root = (FrameLayout) findViewById(R.id.image_grid);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(Color.BLACK);
@@ -62,15 +92,13 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("");
         }
 
         final Intent intent = getIntent();
-        mDefaultCount = intent.getIntExtra(EXTRA_SELECT_COUNT, DEFAULT_IMAGE_SIZE);
-        final int mode = intent.getIntExtra(EXTRA_SELECT_MODE, MODE_MULTI);
-        final boolean isShow = intent.getBooleanExtra(EXTRA_SHOW_CAMERA, true);
-        if(mode == MODE_MULTI && intent.hasExtra(EXTRA_DEFAULT_SELECTED_LIST)) {
-            resultList = intent.getStringArrayListExtra(EXTRA_DEFAULT_SELECTED_LIST);
-        }
+        mDefaultCount = 9;
+        final int mode = MultiImageSelectorActivity.MODE_MULTI;
+        final boolean isShow = false;
 
         mSubmitButton = (Button) findViewById(R.id.commit);
         if(mode == MODE_MULTI){
@@ -82,7 +110,11 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
                     if(resultList != null && resultList.size() >0){
                         // Notify success
                         Intent intent = new Intent(MultiImageSelectorActivity.this, HorizontalImagesActivity.class);
-                        intent.putStringArrayListExtra(EXTRA_RESULT, resultList);
+//                        intent.putStringArrayListExtra(EXTRA_RESULT, resultList);
+                        Gson gsonBuilder = new GsonBuilder().create();
+                        editor.putString("imagesPath", gsonBuilder.toJson(resultList));
+                        Log.d(TAG,"gsonBuilder.toJson(resultList) " + gsonBuilder.toJson(resultList));
+                        editor.commit();
                         startActivity(intent);
                         return;
                     }else{
@@ -132,14 +164,14 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
                 getString(R.string.mis_action_done), size, mDefaultCount));
     }
 
-    @Override
-    public void onSingleImageSelected(String path) {
-        Intent data = new Intent();
-        resultList.add(path);
-        data.putStringArrayListExtra(EXTRA_RESULT, resultList);
-        setResult(RESULT_OK, data);
-        finish();
-    }
+//    @Override
+//    public void onSingleImageSelected(String path) {
+//        Intent data = new Intent();
+//        resultList.add(path);
+//        data.putStringArrayListExtra(EXTRA_RESULT, resultList);
+//        setResult(RESULT_OK, data);
+//        finish();
+//    }
 
     @Override
     public void onImageSelected(String path) {
@@ -157,19 +189,19 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
         updateDoneText(resultList);
     }
 
-    @Override
-    public void onCameraShot(File imageFile) {
-        if(imageFile != null) {
-            // notify system the image has change
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageFile)));
-
-            Intent data = new Intent();
-            resultList.add(imageFile.getAbsolutePath());
-            data.putStringArrayListExtra(EXTRA_RESULT, resultList);
-            setResult(RESULT_OK, data);
-            finish();
-        }
-    }
+//    @Override
+//    public void onCameraShot(File imageFile) {
+//        if(imageFile != null) {
+//            // notify system the image has change
+//            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(imageFile)));
+//
+//            Intent data = new Intent();
+//            resultList.add(imageFile.getAbsolutePath());
+//            data.putStringArrayListExtra(EXTRA_RESULT, resultList);
+//            setResult(RESULT_OK, data);
+//            finish();
+//        }
+//    }
 
 
 

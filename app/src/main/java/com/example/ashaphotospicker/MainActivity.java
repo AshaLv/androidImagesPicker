@@ -1,7 +1,6 @@
 package com.example.ashaphotospicker;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,40 +11,36 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Printer;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.ashaphotospicker.camera.MultiImageSelector;
 import com.example.ashaphotospicker.camera.MultiImageSelectorActivity;
 
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "MainActivity";
 
-    TextView addPhotosButtonText;
+    private TextView addPhotosButtonText;
 
     protected static final int REQUEST_STORAGE_READ_ACCESS_PERMISSION = 101;
     protected static final int REQUEST_STORAGE_ACCESS_PERMISSION = 102;
-    private ArrayList<String> mSelectPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        addPhotosButtonText = findViewById(R.id.addPhotosButtonText);
-        addPhotosButtonTextClickEventListener();
-    }
-
-    private void addPhotosButtonTextClickEventListener() {
+        addPhotosButtonText = (TextView) findViewById(R.id.addPhotosButtonText);
+        Log.d(TAG,"addPhotosButtonText openImageGallery");
+        Log.d(TAG,(String)addPhotosButtonText.getText());
         addPhotosButtonText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG,"openImageGallery");
                 openImageGallery();
             }
         });
+        Log.d(TAG,(String)addPhotosButtonText.getText());
     }
 
     public void checkCameraRelatedPermission() {
@@ -54,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
             requestCameraRelatedPermission(Manifest.permission.READ_EXTERNAL_STORAGE,
                     getString(R.string.mis_permission_rationale),
                     REQUEST_STORAGE_ACCESS_PERMISSION);
+        } else {
+            pickImage();
         }
     }
 
@@ -80,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG,"does permission finished go into here");
         if(requestCode == REQUEST_STORAGE_READ_ACCESS_PERMISSION) {
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG,"4234242");
                 pickImage();
             }
         } else {
@@ -100,8 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void openImageGallery() {
         checkCameraRelatedPermission();
-        pickImage();
-
     }
 
 }
