@@ -1,5 +1,6 @@
 package com.example.ashaphotospicker.camera;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipDescription;
@@ -95,6 +96,13 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     private final int usedWidthNumber = 145235425;
     private final int usedHeightNumber = 145435425;
+    private final int ADD_BRAND_NAME_REQUEST_CODE = 314;
+    private final int ADD_PRODUCT_REQUEST_CODE = 4398;
+    private final int PRODUCT_HIDDEN_TEXT = 4959;
+    private final int BRAND_HIDDEN_TEXT = 4912;
+    private boolean OLD_TAG_BE_CLICKED = false;
+    private final int NEED_BRAND_NAME_BACK_FLAG = 324;
+    private final int NEED_PRODUCT_NAME_BACK_FLAG = 111;
 
     @Override
     protected void onResume() {
@@ -299,6 +307,14 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             createBottomBar();
             bottomBar.show();
         }else{
+            if(OLD_TAG_BE_CLICKED == false) {
+                //说明这是点击一个新的位置而弹出来的
+                brandResult.setText("");
+                productResult.setText("");
+            } else {
+                //说明这是点击了一个存在的标签然后对话框弹出来
+
+            }
             bottomBar.show();
         }
     }
@@ -320,7 +336,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         //第一行linearLayout：取消 、标题、 保存
         LinearLayout linearLayout1 = new LinearLayout(this);
         linearLayout1.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout1.setBackgroundColor(Color.BLUE);
         params1 = new LinearLayoutParamsFac().createOnlyWidthMatchParent();
         params1.topMargin = 40;
         params1.bottomMargin = 100;
@@ -331,17 +346,14 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         params1.weight = 1;
         cancelText.setGravity(Gravity.CENTER);
         cancelText.setLayoutParams(params1);
-        cancelText.setBackgroundColor(Color.RED);
         TextView titleText = new TextView(this);
         titleText.setText("品牌标签");
-        titleText.setBackgroundColor(Color.BLUE);
         params1 = new LinearLayoutParamsFac().createDoubleContent();
         params1.weight = 2;
         titleText.setGravity(Gravity.CENTER);
         titleText.setLayoutParams(params1);
         TextView saveText = new TextView(this);
         saveText.setText("保存");
-        saveText.setBackgroundColor(Color.GRAY);
         params1 = new LinearLayoutParamsFac().createDoubleContent();
         params1.weight = 1;
         saveText.setLayoutParams(params1);
@@ -354,71 +366,85 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
 
         //第二行linearLayout：添加商品、商品结果
-        LinearLayout linearLayout2 = new LinearLayout(this);
-        linearLayout2.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout2.setBackgroundColor(Color.RED);
-        params1 = new LinearLayoutParamsFac().createOnlyWidthMatchParent();
-        params1.bottomMargin = 50;
-        linearLayout2.setLayoutParams(params1);
+        RelativeLayout relativeLayout2 = new RelativeLayout(this);
+        relativeLayout2.setClickable(true);
+        relativeLayout2.setBackgroundColor(Color.LTGRAY);
+        RelativeLayout.LayoutParams params = new RelativeLayoutParamsFac().createOnlyWidthMatchParent();
+        params.bottomMargin = 50;
+        relativeLayout2.setLayoutParams(params);
         TextView addProductText = new TextView(this);
+        addProductText.setClickable(false);
         addProductText.setText("添加商品");
-        addProductText.setGravity(Gravity.LEFT);
-        params1 = new LinearLayoutParamsFac().createDoubleContent();
-        params1.leftMargin = 40;
-        params1.weight = 1;
-        addProductText.setLayoutParams(params1);
+        params = new RelativeLayoutParamsFac().createDoubleContent();
+        params.leftMargin = 80;
+        addProductText.setLayoutParams(params);
         productResult = new TextView(this);
-        productResult.setGravity(Gravity.RIGHT);
-        params1 = new LinearLayoutParamsFac().createDoubleContent();
-        params1.rightMargin = 40;
-        params1.weight = 1;
-        productResult.setGravity(Gravity.RIGHT);
-        productResult.setLayoutParams(params1);
+        productResult.setClickable(false);
+        params = new RelativeLayoutParamsFac().createDoubleContent();
+        params.addRule(
+                RelativeLayout.ALIGN_PARENT_RIGHT
+        );
+        params.rightMargin = 80;
+        productResult.setLayoutParams(params);
 
-        linearLayout2.addView(addProductText);
-        linearLayout2.addView(productResult);
-        linearLayout.addView(linearLayout2);
+        relativeLayout2.addView(addProductText);
+        relativeLayout2.addView(productResult);
+        relativeLayout2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HorizontalImagesActivity.this.gotoAddProductActivity();
+            }
+        });
+        linearLayout.addView(relativeLayout2);
 
         //第三行linearLayout：添加提示信息——或为该商品打自己的标签
         LinearLayout linearLayout4 = new LinearLayout(this);
         linearLayout4.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout4.setBackgroundColor(Color.GRAY);
         params1 = new LinearLayoutParamsFac().createOnlyWidthMatchParent();
         params1.bottomMargin = 50;
         linearLayout4.setLayoutParams(params1);
         params1 = new LinearLayoutParamsFac().createDoubleContent();
         params1.weight = 1;
         TextView prompt = new TextView(this);
-        prompt.setText("或为该商品打自己的标签");
+        prompt.setText("或为该图片打自己的标签");
         prompt.setGravity(Gravity.CENTER);
         prompt.setLayoutParams(params1);
         linearLayout4.addView(prompt);
         linearLayout.addView(linearLayout4);
 
         //第四行linearLayout：添加品牌、品牌结果
-        LinearLayout linearLayout3 = new LinearLayout(this);
-        linearLayout3.setOrientation(LinearLayout.HORIZONTAL);
-        linearLayout3.setBackgroundColor(Color.GREEN);
-        params1 = new LinearLayoutParamsFac().createOnlyWidthMatchParent();
-        params1.bottomMargin = 100;
-        linearLayout3.setLayoutParams(params1);
+        RelativeLayout relativeLayout3 = new RelativeLayout(this);
+        relativeLayout3.setBackgroundColor(Color.LTGRAY);
+        relativeLayout3.setClickable(true);
+        params = new RelativeLayoutParamsFac().createOnlyWidthMatchParent();
+        params.bottomMargin = 100;
+        relativeLayout3.setLayoutParams(params);
         TextView addBrandText = new TextView(this);
+        addBrandText.setClickable(false);
         addBrandText.setText("添加品牌");
         addBrandText.setGravity(Gravity.LEFT);
-        params1 = new LinearLayoutParamsFac().createDoubleContent();
-        params1.leftMargin = 40;
-        params1.weight = 1;
-        addBrandText.setLayoutParams(params1);
+        params = new RelativeLayoutParamsFac().createDoubleContent();
+        params.leftMargin = 80;
+        addBrandText.setLayoutParams(params);
         brandResult = new TextView(this);
+        brandResult.setClickable(false);
         brandResult.setGravity(Gravity.RIGHT);
-        params1 = new LinearLayoutParamsFac().createDoubleContent();
-        params1.rightMargin = 40;
-        params1.weight = 1;
-        brandResult.setLayoutParams(params1);
+        params = new RelativeLayoutParamsFac().createDoubleContent();
+        params.addRule(
+                RelativeLayout.ALIGN_PARENT_RIGHT
+        );
+        params.rightMargin = 80;
+        brandResult.setLayoutParams(params);
 
-        linearLayout3.addView(addBrandText);
-        linearLayout3.addView(brandResult);
-        linearLayout.addView(linearLayout3);
+        relativeLayout3.addView(addBrandText);
+        relativeLayout3.addView(brandResult);
+        relativeLayout3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HorizontalImagesActivity.this.gotoAddBrandNameActicvity();
+            }
+        });
+        linearLayout.addView(relativeLayout3);
 
 
         //添加到一个对话框
@@ -445,6 +471,43 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case ADD_BRAND_NAME_REQUEST_CODE:
+                if(resultCode == Activity.RESULT_OK) {
+                    String brandName = data.getStringExtra("brandName");
+                    String brandId = data.getStringExtra("brandId");
+                    setBrandResultText(brandName,brandId);
+                }
+                break;
+            case ADD_PRODUCT_REQUEST_CODE:
+                if(resultCode == Activity.RESULT_OK) {
+                    String productName = data.getStringExtra("productName");
+                    String productUrl = data.getStringExtra("productUrl");
+                    String productId = data.getStringExtra("productId");
+                    String brandName = data.getStringExtra("brandName");
+                    String brandId = data.getStringExtra("brandId");
+                    setProductResultText(productName,productUrl,productId);
+                    setBrandResultText(brandName,brandId);
+                }
+                break;
+            default: break;
+        }
+    }
+
+    private void gotoAddBrandNameActicvity() {
+        Intent intent = new Intent(HorizontalImagesActivity.this,AddBrandNameActivity.class);
+        intent.putExtra("flag","brandNameBack");
+        startActivityForResult(intent,ADD_BRAND_NAME_REQUEST_CODE);
+    }
+
+    private void gotoAddProductActivity() {
+        Intent intent = new Intent(HorizontalImagesActivity.this,AddProductActivity.class);
+        intent.putExtra("flag","productNameBack");
+        startActivityForResult(intent,ADD_PRODUCT_REQUEST_CODE);
+    }
+
     private void addClickListenerToCancelText(TextView cancelText) {
         cancelText.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -458,12 +521,20 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         saveText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setProductResultText("商品结果");
-                setBrandResultText("品牌结果");
-                String brandResultText = (String) brandResult.getText();
-                putResultTextOntoCurrentImage(brandResultText);
-                String url = "";
-                updateImagesTagCacheData(currentHolderImagePath, brandResultText, x/currentHolderImageView.getWidth(), y/currentHolderImageView.getHeight(), url);
+                String brandWrittenText = (String) brandResult.getText();
+                String brandResultText = (String) brandResult.getTag();
+                if(brandWrittenText != "" && brandResultText != "" && OLD_TAG_BE_CLICKED == false && root.findViewWithTag(brandResultText) != null) {
+                    Toast.makeText(HorizontalImagesActivity.this,"该标签名已经存在了哦", Toast.LENGTH_SHORT);
+                    return;
+                }
+                if(brandWrittenText != "" && brandResultText != "") {
+                    putResultTextOntoCurrentImage(brandResultText);
+                    String url = "";
+                    updateImagesTagCacheData(currentHolderImagePath, brandResultText, x/currentHolderImageView.getWidth(), y/currentHolderImageView.getHeight(), url);
+                } else {
+                    bottomBar.dismiss();
+                }
+
             }
         });
     }
@@ -544,12 +615,16 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     }
 
-    public void setProductResultText(String text) {
-        productResult.setText(text);
+    public void setProductResultText(String productName, String productUrl, String productId) {
+        productResult.setText(productName);
+        productResult.setTag(";ashaSeperator;" + productName + ":" + productUrl + ":" + productId);
     }
 
-    public void setBrandResultText(String text) {
+    public void setBrandResultText(String text, String brandId) {
         brandResult.setText(text);
+        if(productResult.getText() != "") {
+            brandResult.setTag(text+productResult.getTag()+":"+brandId);
+        }
     }
 
     private void putResultTextOntoCurrentImage(final String brandResultText) {
@@ -572,7 +647,9 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             int TAG_BRAND_ID = randomInt;
             params1 = new RelativeLayoutParamsFac().createDoubleContent();
             final TextView tagBrandText = new TextView(this);
-            tagBrandText.setText(brandResultText);
+            String textForDisplay = brandResultText.split(";ashaSeperator;")[0];
+            tagBrandText.setText(textForDisplay);
+            tagBrandText.setTag(brandResultText);
             tagBrandText.setId(TAG_BRAND_ID);
             tagBrandText.setTextSize(14);
             tagBrandText.setLayoutParams(params1);
@@ -605,8 +682,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             relativeLayout.addView(deleteText1);
             relativeLayout.addView(tagBrandText);
             slidingImageRoot.addView(relativeLayout);
-
-            relativeLayout.setTag("被移动的标签名");
 
             //为"标签"TextView加拖动事件，仅允许在当前ImageView的四维界限活动
 
@@ -673,24 +748,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
                                 View vw = (View) event.getLocalState();
 
-                                Log.d("11111","1111");
-
-                                Log.d("event.getX",String.valueOf(event.getX() + relativeLayout.getWidth()));
-                                Log.d("currentImageMaxX",String.valueOf(currentImageMaxX));
-                                Log.d("event.getY",String.valueOf(event.getY() + relativeLayout.getHeight()));
-                                Log.d("currentImageMaxY",String.valueOf(currentImageMaxY));
-                                Log.d("currentImageMinX",String.valueOf(currentImageMinX));
-                                Log.d("currentImageMinY",String.valueOf(currentImageMinY));
-                                Log.d("slidingImageRoot",String.valueOf(slidingImageRoot.getWidth()));
-                                Log.d("slidingImageRoot",String.valueOf(slidingImageRoot.getHeight()));
-                                Log.d("horizontalImages",String.valueOf(horizontalImagesScreenRecycleView.getWidth()));
-                                Log.d("horizontalImages",String.valueOf(horizontalImagesScreenRecycleView.getHeight()));
-                                Log.d("relativeLayout",String.valueOf(relativeLayout.getWidth()));
-                                Log.d("relativeLayout",String.valueOf(relativeLayout.getHeight()));
-                                Log.d("getIntrinsicHeight",String.valueOf(currentHolderImageView.getDrawable().getIntrinsicHeight()));
-
-                                Log.d("11111","1111");
-
                                 if((event.getX() + relativeLayout.getWidth()) < currentImageMaxX &&
                                         event.getX() >= currentImageMinX &&
                                         (event.getY() + relativeLayout.getHeight())  < currentImageMaxY &&
@@ -700,10 +757,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                                     // Gets the text data from the item.
                                     String dragData = item.getText().toString();
 
-
-
-                                    //caste the view into LinearLayout as our drag acceptable layout is LinearLayout
-
+                                    //cast the view into LinearLayout as our drag acceptable layout is LinearLayout
 
                                     RelativeLayout.LayoutParams params = new RelativeLayoutParamsFac().createDoubleContent();
                                     params.leftMargin = (int) event.getX();

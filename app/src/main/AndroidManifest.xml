@@ -27,6 +27,10 @@
 
         <activity
             android:name=".camera.HorizontalImagesActivity"/>
+
+        <activity android:name=".camera.AddBrandNameActivity"/>
+
+        <activity android:name=".camera.AddProductActivity" />
     </application>
 
 </manifest>

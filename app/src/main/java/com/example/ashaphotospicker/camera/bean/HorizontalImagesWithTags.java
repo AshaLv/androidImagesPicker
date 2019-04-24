@@ -9,6 +9,7 @@ public class HorizontalImagesWithTags {
 
     public String url;
     public ArrayList<String> tagNames;
+    // 用;ashaSeparator;做品牌名称的分割线，例子"tagName;ashaSperator;ProductName:ProductUrl:ProductId:BrandId
     public ArrayList<Float> tagPoints;
 
     public HorizontalImagesWithTags(String url,ArrayList<String> tagNames,ArrayList<Float> tagPoints) {
