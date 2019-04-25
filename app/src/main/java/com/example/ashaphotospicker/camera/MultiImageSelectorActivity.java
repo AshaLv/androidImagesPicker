@@ -1,35 +1,22 @@
 package com.example.ashaphotospicker.camera;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import java.io.File;
 import java.util.ArrayList;
-
+import com.example.ashaphotospicker.AshaHelper.SharedPreferenceHelper;
 import com.example.ashaphotospicker.R;
-import com.example.ashaphotospicker.camera.HorizontalImagesActivity;
-import com.example.ashaphotospicker.camera.adapter.ImageGridAdapter;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-
-public class MultiImageSelectorActivity extends AppCompatActivity implements MultiImageSelectorFragment.Callback {
+public class MultiImageSelectorActivity extends SharedPreferenceHelper implements MultiImageSelectorFragment.Callback {
     private static final String TAG = "MultiImageSelector";
     // Single choice
     public static final int MODE_SINGLE = 0;
@@ -53,19 +40,12 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
     private Button mSubmitButton;
     private int mDefaultCount = DEFAULT_IMAGE_SIZE;
 
-    private SharedPreferences sharedPreferences;
-    private FrameLayout root;
-
     public ArrayList<String> getImagesPathFromCache() {
-        if(sharedPreferences.contains("imagesPath") && sharedPreferences.getString("imagesPath","").length() > 0) {
+        ArrayList result = this.getCachedImagesPath();
+        if(result != null) {
             resultList.clear();
-            Gson gson = new Gson();
-            ArrayList resultList_ = gson.fromJson(sharedPreferences.getString("imagesPath",""), ArrayList.class);
-            resultList.addAll(resultList_);
-            Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + resultList);
+            resultList.addAll(result);
             updateDoneText(resultList);
-        } else {
-            resultList = new ArrayList<>();
         }
         return resultList;
     }
@@ -73,12 +53,9 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sharedPreferences = getSharedPreferences("multiImageSelectorActivityImagesPathCache", MODE_PRIVATE);
-        final SharedPreferences.Editor editor = sharedPreferences.edit();
+
         setTheme(R.style.MIS_NO_ACTIONBAR);
         setContentView(R.layout.multi_photo_screen);
-
-        root = (FrameLayout) findViewById(R.id.image_grid);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setStatusBarColor(Color.BLACK);
@@ -110,9 +87,7 @@ public class MultiImageSelectorActivity extends AppCompatActivity implements Mul
                     if(resultList != null && resultList.size() >0){
                         // Notify success
                         Intent intent = new Intent(MultiImageSelectorActivity.this, HorizontalImagesActivity.class);
-                        Gson gsonBuilder = new GsonBuilder().create();
-                        editor.putString("imagesPath", gsonBuilder.toJson(resultList));
-                        editor.commit();
+                        MultiImageSelectorActivity.this.saveCachedImagesPath(resultList);
                         startActivity(intent);
                         return;
                     }else{

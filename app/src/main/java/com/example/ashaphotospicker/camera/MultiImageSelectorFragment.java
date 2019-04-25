@@ -267,28 +267,6 @@ public class MultiImageSelectorFragment extends Fragment {
         getActivity().getSupportLoaderManager().initLoader(LOADER_ALL, null, mLoaderCallback);
     }
 
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if(requestCode == REQUEST_CAMERA){
-//            if(resultCode == Activity.RESULT_OK) {
-//                if (mTmpFile != null) {
-//                    if (mCallback != null) {
-//                        mCallback.onCameraShot(mTmpFile);
-//                    }
-//                }
-//            }else{
-//                // delete tmp file
-//                while (mTmpFile != null && mTmpFile.exists()){
-//                    boolean success = mTmpFile.delete();
-//                    if(success){
-//                        mTmpFile = null;
-//                    }
-//                }
-//            }
-//        }
-//    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         if(mFolderPopupWindow != null){
@@ -381,10 +359,6 @@ public class MultiImageSelectorFragment extends Fragment {
                     }
                 }
                 mImageAdapter.select(image);
-            }else if(mode == MODE_SINGLE){
-//                if(mCallback != null){
-//                    mCallback.onSingleImageSelected(image.path);
-//                }
             }
         }
     }
@@ -510,10 +484,8 @@ public class MultiImageSelectorFragment extends Fragment {
      * Callback for host activity
      */
     public interface Callback{
-//        void onSingleImageSelected(String path);
         void onImageSelected(String path);
         void onImageUnselected(String path);
         ArrayList<String> getImagesPathFromCache();
-//        void onCameraShot(File imageFile);
     }
 }
