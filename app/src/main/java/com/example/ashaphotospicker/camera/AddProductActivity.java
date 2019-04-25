@@ -113,11 +113,13 @@ public class AddProductActivity extends BaseActivity {
         String productId = (String) object.get("productId");
         String productUrl = (String) object.get("productUrl");
         String brandName = (String) object.get("brandName");
+        String brandId = (String) object.get("brandId");
         Intent backIntent = new Intent();
         backIntent.putExtra("productName",productName);
         backIntent.putExtra("productId",productId);
         backIntent.putExtra("productUrl",productUrl);
         backIntent.putExtra("brandName",brandName);
+        backIntent.putExtra("brandId",brandId);
         setResult(Activity.RESULT_OK,backIntent);
         finish();
     }

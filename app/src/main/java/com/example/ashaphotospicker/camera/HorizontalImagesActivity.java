@@ -14,6 +14,8 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
 import android.support.v7.app.ActionBar;
@@ -104,9 +106,12 @@ public class HorizontalImagesActivity extends AppCompatActivity {
     private final int NEED_BRAND_NAME_BACK_FLAG = 324;
     private final int NEED_PRODUCT_NAME_BACK_FLAG = 111;
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    private SharedPreferences.Editor editor = null;
+
+    private TextView currentBeingModifiedExistedTag;
+    private String oldBrandResultText;
+
+    private void initImages() {
         if(multiImageSelectorActivityImagesPathCacheSharedPreferences.contains("imagesPath") && multiImageSelectorActivityImagesPathCacheSharedPreferences.getString("imagesPath","").length() > 0) {
             if(this.horizontalImages.size() > 0) {
                 this.horizontalImages.clear();
@@ -114,14 +119,12 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             ArrayList<String> horizontalImages_ = gson.fromJson(multiImageSelectorActivityImagesPathCacheSharedPreferences.getString("imagesPath",""), ArrayList.class);
             this.horizontalImages.addAll(horizontalImages_);
             this.horizontalImagesAdapter.notifyDataSetChanged();
-            Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + horizontalImages);
         }
     }
 
     public void displayCachedTagsInsideImage(ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
         if(multiImageSelectorActivityImagesWithTagsSharedPreferences.contains("ImagesWithTags") && multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags","").length() > 0) {
             horizontalImagesWithTags = gson.fromJson(multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags",""), Hashtable.class);
-
             if(horizontalImagesWithTags.get(currentHolderImagePath) != null) {
                 String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(currentHolderImagePath));
                 HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
@@ -137,8 +140,29 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 }
 
             }
-            Log.d(TAG,"gson.fromJson(sharedPreferences.getString(\"imagesPath\",\"\"), ArrayList.class) " + horizontalImagesWithTags);
         }
+    }
+
+    private HorizontalImagesWithTags getCurrentImagePathCacheData(String path) {
+        horizontalImagesWithTags = gson.fromJson(multiImageSelectorActivityImagesWithTagsSharedPreferences.getString("ImagesWithTags",""), Hashtable.class);
+        String HorizontalImagesWithTagsToString = gson.toJson(horizontalImagesWithTags.get(path));
+        HorizontalImagesWithTags foo = gson.fromJson(HorizontalImagesWithTagsToString,HorizontalImagesWithTags.class);
+        return foo;
+    }
+
+    private SharedPreferences.Editor singletonGetEditor() {
+        if(editor == null) {
+            editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
+            return editor;
+        } else {
+            return editor;
+        }
+    }
+
+    private void updateCurrentImagePathCacheData(String path, HorizontalImagesWithTags newData) {
+        horizontalImagesWithTags.put(path,newData);
+        singletonGetEditor().putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+        singletonGetEditor().commit();
     }
 
     @Override
@@ -193,9 +217,8 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             );
             horizontalImagesWithTags.put(imagePath,foo);
         }
-        final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-        editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
-        editor.commit();
+        singletonGetEditor().putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+        singletonGetEditor().commit();
     }
 
     private void updateImagesTagCacheDataAfterDrag(String imagePath, float x, float y, String text) {
@@ -210,9 +233,8 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 }
             }
             horizontalImagesWithTags.put(imagePath,foo);
-            final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-            editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
-            editor.commit();
+            singletonGetEditor().putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+            singletonGetEditor().commit();
         }
     }
 
@@ -229,16 +251,14 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 }
             }
             horizontalImagesWithTags.put(imagePath,foo);
-            final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-            editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
-            editor.commit();
+            singletonGetEditor().putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+            singletonGetEditor().commit();
         }
     }
 
     private void finalUpdateImagesTagCacheData() {
-        final SharedPreferences.Editor editor = multiImageSelectorActivityImagesWithTagsSharedPreferences.edit();
-        editor.putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
-        editor.commit();
+        singletonGetEditor().putString("ImagesWithTags", gsonBuilder.toJson(horizontalImagesWithTags));
+        singletonGetEditor().commit();
     }
 
     private void goToStoryOfPostUgc() {
@@ -289,7 +309,28 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         horizontalImagesAdapter = new HorizontalImagesAdapter(this, horizontalImages, this);
 
         horizontalImagesScreenRecycleView.setAdapter(horizontalImagesAdapter);
+
+        initImages();
+
         new PagerSnapHelper().attachToRecyclerView(horizontalImagesScreenRecycleView);
+
+        TextView p = (TextView)findViewById(R.id.promptOfAddingTagAndProductName);
+        p.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,gson.toJson(getCurrentImagePathCacheData(currentHolderImagePath)));
+            }
+        });
+
+        p.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Log.d(TAG,currentHolderImagePath);
+                HorizontalImagesWithTags h = new HorizontalImagesWithTags("",new ArrayList<String>(),new ArrayList<Float>());
+                updateCurrentImagePathCacheData(currentHolderImagePath,h);
+                return true;
+            }
+        });
 
 
     }
@@ -517,24 +558,37 @@ public class HorizontalImagesActivity extends AppCompatActivity {
         });
     }
 
+    private ArrayList replaceTagNamesInCacheData(ArrayList tagNames,String newValue) {
+        for(int i=0; i<tagNames.size(); i++) {
+            if (tagNames.get(i).equals(oldBrandResultText)) {
+                tagNames.set(i,newValue);
+                break;
+            }
+        }
+        return tagNames;
+    }
+
     private void addClickListenerToSaveText(TextView saveText) {
         saveText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String brandWrittenText = (String) brandResult.getText();
                 String brandResultText = (String) brandResult.getTag();
-                if(brandWrittenText != "" && brandResultText != "" && OLD_TAG_BE_CLICKED == false && root.findViewWithTag(brandResultText) != null) {
-                    Toast.makeText(HorizontalImagesActivity.this,"该标签名已经存在了哦", Toast.LENGTH_SHORT);
-                    return;
+
+                if(OLD_TAG_BE_CLICKED && !oldBrandResultText.equals(brandResultText)) { //说明是修改现存的标签
+                    //如果brandResultText更原来的不一样，那么数据就要进行替换了
+                    HorizontalImagesWithTags horizontalImagesWithTags = getCurrentImagePathCacheData(currentHolderImagePath);
+                    horizontalImagesWithTags.tagNames = replaceTagNamesInCacheData(horizontalImagesWithTags.tagNames,brandResultText);
+                    updateCurrentImagePathCacheData(currentHolderImagePath,horizontalImagesWithTags);
+                    currentBeingModifiedExistedTag.setText(brandWrittenText);
                 }
-                if(brandWrittenText != "" && brandResultText != "") {
+                if(!OLD_TAG_BE_CLICKED && brandWrittenText != "" && brandResultText != "") {
+                    // 其实主要是保证实际brandResult有没有填了字
                     putResultTextOntoCurrentImage(brandResultText);
                     String url = "";
                     updateImagesTagCacheData(currentHolderImagePath, brandResultText, x/currentHolderImageView.getWidth(), y/currentHolderImageView.getHeight(), url);
-                } else {
-                    bottomBar.dismiss();
                 }
-
+                bottomBar.dismiss();
             }
         });
     }
@@ -558,13 +612,6 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
     public void cutTheImage(int realImageWidth, int realImageHeight, File imageFile, final ImageView imageview, final int position, final RelativeLayout slidingImagesRoot) {
 
-        Log.d(TAG,"get real image width: " + String.valueOf(realImageWidth));
-        Log.d(TAG,"get real image height: " + String.valueOf(realImageHeight));
-        Log.d(TAG, "horizontalSlidingImages's width is: " + horizontalImagesScreenRecycleView.getWidth());
-        Log.d(TAG, "horizontalSlidingImages's height is: " + horizontalImagesScreenRecycleView.getHeight());
-        Log.d(TAG, "root's width is: " + root.getWidth());
-        Log.d(TAG, "root's height is: " + root.getHeight());
-
         final float recycleViewWidthToHeightRatio = horizontalImagesScreenRecycleView.getWidth() / horizontalImagesScreenRecycleView.getHeight();
         final float realImageWidthToHeightRatio = realImageWidth / realImageHeight;
 
@@ -573,13 +620,11 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
         if(realImageWidthToHeightRatio < recycleViewWidthToHeightRatio) {
             // 如果实际图片宽高比小于屏幕提供显示图片的宽高比，则说明图片高度过高，直接将其截成1：1
-            Log.d(TAG,"如果实际图片宽高比小于屏幕提供显示图片的宽高比，则说明图片高度过高，直接将其截成1：1");
             usedWidth = horizontalImagesScreenRecycleView.getWidth();
             usedHeight = usedWidth;
 
         } else {
             // 这种情况就是屏幕提供的内容区可以将该图片显示完整
-            Log.d(TAG, "这种情况就是屏幕提供的内容区可以将该图片显示完整");
             usedWidth = horizontalImagesScreenRecycleView.getWidth();
             usedHeight = usedWidth / realImageWidthToHeightRatio;
         }
@@ -605,6 +650,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                         x2 = event.getX();
                         y2 = event.getY();
                         this_.recordPoint(x2,y2,imageview,horizontalImages.get(position),slidingImagesRoot);
+                        OLD_TAG_BE_CLICKED = false;
                         this_.showBottomModal();
                         break;
                     default: break;
@@ -616,19 +662,29 @@ public class HorizontalImagesActivity extends AppCompatActivity {
     }
 
     public void setProductResultText(String productName, String productUrl, String productId) {
-        productResult.setText(productName);
+        if(!productName.equals("noProductName")) productResult.setText(productName);
         productResult.setTag(";ashaSeperator;" + productName + ":" + productUrl + ":" + productId);
     }
 
-    public void setBrandResultText(String text, String brandId) {
-        brandResult.setText(text);
-        if(productResult.getText() != "") {
-            brandResult.setTag(text+productResult.getTag()+":"+brandId);
+    public void setBrandResultText(String brandName, String brandId) {
+        brandResult.setText(brandName);
+        if(brandResult.getText() != "") {
+            if(productResult.getText() != "") {
+                brandResult.setTag(brandName+productResult.getTag()+":"+brandId);
+            }else{
+                //当商品没有选的时候，数据就是长这样的
+                brandResult.setTag(brandName+";ashaSeperator;noProductName:noProductUrl:noProductId:"+brandId);
+            }
+
         }
     }
 
-    private void putResultTextOntoCurrentImage(final String brandResultText) {
+    private void setThisTimeCurrentEnvironment(String currentHolderImagePath,ImageView currentHolderImageView) {
+        this.currentHolderImagePath = currentHolderImagePath;
+        this.currentHolderImageView = currentHolderImageView;
+    }
 
+    private void putResultTextOntoCurrentImage(final String brandResultText) {
         //在当前的ImageView下创造一个"标签"TextView,然后将这个"标签"TextView写在指定的图片位置
         int randomInt = (int )(Math. random() * 1444450 + 1); // 足够大保证不重复
         if(brandResultText != "") {
@@ -643,14 +699,12 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             params1.leftMargin = (int) x;
             params1.topMargin = (int) y;
             relativeLayout.setLayoutParams(params1);
-
-            int TAG_BRAND_ID = randomInt;
             params1 = new RelativeLayoutParamsFac().createDoubleContent();
             final TextView tagBrandText = new TextView(this);
             String textForDisplay = brandResultText.split(";ashaSeperator;")[0];
             tagBrandText.setText(textForDisplay);
             tagBrandText.setTag(brandResultText);
-            tagBrandText.setId(TAG_BRAND_ID);
+            tagBrandText.setId(randomInt);
             tagBrandText.setTextSize(14);
             tagBrandText.setLayoutParams(params1);
 
@@ -662,7 +716,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
             deleteText1.setTextSize(14);
             params1.addRule(
                     RelativeLayout.RIGHT_OF,
-                    TAG_BRAND_ID
+                    tagBrandText.getId()
             );
             params1.leftMargin = 4;
             deleteText1.setLayoutParams(params1);
@@ -681,7 +735,10 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
             relativeLayout.addView(deleteText1);
             relativeLayout.addView(tagBrandText);
+            relativeLayout.setTag("被拖动的标签");
             slidingImageRoot.addView(relativeLayout);
+
+            Log.d("11","11111111");
 
             //为"标签"TextView加拖动事件，仅允许在当前ImageView的四维界限活动
 
@@ -692,23 +749,46 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 final float currentImageMaxX = currentImageMinX + currentHolderImageView.getWidth();
                 final float currentImageMaxY = currentImageMinY + (float)currentHolderImageView.getTag(usedHeightNumber);
 
+                //对标签做点击监听
+                tagBrandText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showBottomModal();
+                        // 抽出之前在tagBrandText写进去的旧数据
+                        oldBrandResultText = (String)tagBrandText.getTag();
+                        OLD_TAG_BE_CLICKED = true;
+                        currentBeingModifiedExistedTag = (TextView) v;
+                        setThisTimeCurrentEnvironment(currentHolderImagePath,currentHolderImageView);
+                        String[] brandInfoWrappers = oldBrandResultText.split(";ashaSeperator;");
+                        String[] productInfoWrappers = brandInfoWrappers[1].split(":");
+                        String brandName = brandInfoWrappers[0];
+                        String productName = productInfoWrappers[0];
+                        String productUrl = productInfoWrappers[1];
+                        String productId = productInfoWrappers[2];
+                        String brandId = productInfoWrappers[3];
+                        setProductResultText(productName,productUrl,productId);
+                        setBrandResultText(brandName,brandId);
+                    }
+                });
+
                 //加拖动监听
                 relativeLayout.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent e) {
-                        if (e.getAction() == MotionEvent.ACTION_DOWN) {
-                            ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
-                            String[] mimeTypes = {ClipDescription.MIMETYPE_TEXT_PLAIN};
-                            ClipData dragData = new ClipData(v.getTag().toString(),mimeTypes, item);
-                            View.DragShadowBuilder myShadow = new View.DragShadowBuilder(v);
-                            v.setVisibility(View.INVISIBLE);
-                            v.startDrag(dragData,myShadow,v,0);
-                            return true;
-                        } else {
-                            return false;
+                        switch(e.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
+                                String[] mimeTypes = {ClipDescription.MIMETYPE_TEXT_PLAIN};
+                                ClipData dragData = new ClipData(v.getTag().toString(),mimeTypes, item);
+                                View.DragShadowBuilder myShadow = new View.DragShadowBuilder(v);
+                                v.setVisibility(View.INVISIBLE);
+                                v.startDrag(dragData,myShadow,v,0);
+                                break;
+                            default: break;
                         }
+                        return true;
                     }
-                });
+                } );
 
                 currentHolderImageView.setOnDragListener(new View.OnDragListener() {
                     @Override
@@ -748,9 +828,9 @@ public class HorizontalImagesActivity extends AppCompatActivity {
 
                                 View vw = (View) event.getLocalState();
 
-                                if((event.getX() + relativeLayout.getWidth()) < currentImageMaxX &&
+                                if((event.getX() + vw.getWidth()) < currentImageMaxX &&
                                         event.getX() >= currentImageMinX &&
-                                        (event.getY() + relativeLayout.getHeight())  < currentImageMaxY &&
+                                        (event.getY() + vw.getHeight())  < currentImageMaxY &&
                                         event.getY() >= currentImageMinY) {
                                     // Gets the item containing the dragged data
                                     ClipData.Item item = event.getClipData().getItemAt(0);
@@ -763,9 +843,7 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                                     params.leftMargin = (int) event.getX();
                                     params.topMargin = (int) event.getY();
                                     vw.setLayoutParams(params);
-
                                     updateImagesTagCacheDataAfterDrag(currentHolderImagePath,event.getX()/currentHolderImageView.getWidth(),event.getY()/currentHolderImageView.getHeight(), brandResultText);
-
                                 }
                                 vw.setVisibility(View.VISIBLE);//finally set Visibility to VISIBLE
                                 // Returns true. DragEvent.getResult() will return true.
