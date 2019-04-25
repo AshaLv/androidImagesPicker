@@ -749,46 +749,60 @@ public class HorizontalImagesActivity extends AppCompatActivity {
                 final float currentImageMaxX = currentImageMinX + currentHolderImageView.getWidth();
                 final float currentImageMaxY = currentImageMinY + (float)currentHolderImageView.getTag(usedHeightNumber);
 
-                //对标签做点击监听
-                tagBrandText.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        showBottomModal();
-                        // 抽出之前在tagBrandText写进去的旧数据
-                        oldBrandResultText = (String)tagBrandText.getTag();
-                        OLD_TAG_BE_CLICKED = true;
-                        currentBeingModifiedExistedTag = (TextView) v;
-                        setThisTimeCurrentEnvironment(currentHolderImagePath,currentHolderImageView);
-                        String[] brandInfoWrappers = oldBrandResultText.split(";ashaSeperator;");
-                        String[] productInfoWrappers = brandInfoWrappers[1].split(":");
-                        String brandName = brandInfoWrappers[0];
-                        String productName = productInfoWrappers[0];
-                        String productUrl = productInfoWrappers[1];
-                        String productId = productInfoWrappers[2];
-                        String brandId = productInfoWrappers[3];
-                        setProductResultText(productName,productUrl,productId);
-                        setBrandResultText(brandName,brandId);
-                    }
-                });
-
                 //加拖动监听
-                relativeLayout.setOnTouchListener(new View.OnTouchListener() {
+                tagBrandText.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent e) {
+                        RelativeLayout parent = (RelativeLayout) v.getParent();
                         switch(e.getAction()) {
-                            case MotionEvent.ACTION_DOWN:
-                                ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
+                            case MotionEvent.ACTION_MOVE:
+                                //加拖动监听
+                                ClipData.Item item = new ClipData.Item((CharSequence)parent.getTag());
                                 String[] mimeTypes = {ClipDescription.MIMETYPE_TEXT_PLAIN};
-                                ClipData dragData = new ClipData(v.getTag().toString(),mimeTypes, item);
-                                View.DragShadowBuilder myShadow = new View.DragShadowBuilder(v);
-                                v.setVisibility(View.INVISIBLE);
-                                v.startDrag(dragData,myShadow,v,0);
+                                ClipData dragData = new ClipData(parent.getTag().toString(),mimeTypes, item);
+                                View.DragShadowBuilder myShadow = new View.DragShadowBuilder(parent);
+                                parent.setVisibility(View.INVISIBLE);
+                                parent.startDrag(dragData,myShadow,parent,0);
                                 break;
+                            case MotionEvent.ACTION_UP:
+                                //对标签做点击监听
+                                showBottomModal();
+                                // 抽出之前在tagBrandText写进去的旧数据
+                                oldBrandResultText = (String)tagBrandText.getTag();
+                                OLD_TAG_BE_CLICKED = true;
+                                currentBeingModifiedExistedTag = (TextView) v;
+                                setThisTimeCurrentEnvironment(currentHolderImagePath,currentHolderImageView);
+                                String[] brandInfoWrappers = oldBrandResultText.split(";ashaSeperator;");
+                                String[] productInfoWrappers = brandInfoWrappers[1].split(":");
+                                String brandName = brandInfoWrappers[0];
+                                String productName = productInfoWrappers[0];
+                                String productUrl = productInfoWrappers[1];
+                                String productId = productInfoWrappers[2];
+                                String brandId = productInfoWrappers[3];
+                                setProductResultText(productName,productUrl,productId);
+                                setBrandResultText(brandName,brandId);
                             default: break;
                         }
                         return true;
                     }
-                } );
+                });
+//                relativeLayout.setOnTouchListener(new View.OnTouchListener() {
+//                    @Override
+//                    public boolean onTouch(View v, MotionEvent e) {
+//                        switch(e.getAction()) {
+//                            case MotionEvent.ACTION_DOWN:
+//                                ClipData.Item item = new ClipData.Item((CharSequence)v.getTag());
+//                                String[] mimeTypes = {ClipDescription.MIMETYPE_TEXT_PLAIN};
+//                                ClipData dragData = new ClipData(v.getTag().toString(),mimeTypes, item);
+//                                View.DragShadowBuilder myShadow = new View.DragShadowBuilder(v);
+//                                v.setVisibility(View.INVISIBLE);
+//                                v.startDrag(dragData,myShadow,v,0);
+//                                break;
+//                            default: break;
+//                        }
+//                        return true;
+//                    }
+//                } );
 
                 currentHolderImageView.setOnDragListener(new View.OnDragListener() {
                     @Override
