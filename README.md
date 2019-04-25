@@ -1,3 +1,4 @@
+'''
 Use Case:
 	1 select photos from local photo path;
 	1 多选本地相册中的图片
@@ -17,3 +18,4 @@ Plus：
 	我会对这个项目持续更新，如果这个帮到你了，我会很高兴。
 	如果你觉得有问题或想要交个朋友，可以加我的微信号"lvxinshuai123",
 	注明：github就好
+'''
