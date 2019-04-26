@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import com.example.ashaphotospicker.camera.adapter.FolderAdapter;
 import com.example.ashaphotospicker.camera.adapter.ImageGridAdapter;
 import com.example.ashaphotospicker.camera.bean.Folder;
@@ -438,7 +437,6 @@ public class MultiImageSelectorFragment extends Fragment {
 
                     mImageAdapter.setData(images);
                     resultList = mCallback.getImagesPathFromCache();
-                    Log.d("2222","tttt: "+resultList);
                     if(resultList != null && resultList.size()>0){
                         mImageAdapter.setDefaultSelected(resultList);
                     }

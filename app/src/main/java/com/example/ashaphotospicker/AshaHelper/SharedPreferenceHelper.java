@@ -3,6 +3,7 @@ package com.example.ashaphotospicker.AshaHelper;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.example.ashaphotospicker.camera.bean.ImageTagsCache;
 import com.google.gson.Gson;

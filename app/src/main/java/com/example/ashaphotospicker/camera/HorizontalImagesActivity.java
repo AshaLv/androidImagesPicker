@@ -5,12 +5,10 @@ import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.Toolbar;
@@ -38,9 +36,7 @@ import java.util.Hashtable;
 import com.example.ashaphotospicker.camera.adapter.HorizontalImagesAdapter;
 import com.example.ashaphotospicker.camera.bean.ImageTagsCache;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.squareup.picasso.Picasso;
-
 
 public class HorizontalImagesActivity extends SharedPreferenceHelper {
     private static final String TAG = "HorizontalImages";
@@ -50,8 +46,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     private LinearLayoutManager layoutManager;
 
     private Dialog bottomBar = null;
-    private ArrayList<String> horizontalImages = new ArrayList<String>();
-    private Dictionary<String, ImageTagsCache> horizontalImagesWithTags = new Hashtable<String, ImageTagsCache>();
+    private ArrayList<String> horizontalImages;
+    private Dictionary<String, ImageTagsCache> horizontalImagesWithTags;
 
     private TextView productResult;
     private TextView brandResult;
@@ -64,7 +60,6 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     private final int nextStepButtonId = 42423;
 
     private final Gson gson = new Gson();
-    private final Gson gsonBuilder = new GsonBuilder().create();
 
     private final int usedWidthNumber = 145235425;
     private final int usedHeightNumber = 145435425;
@@ -77,6 +72,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
 
     private void initImages() {
         ArrayList result = this.getCachedImagesPath();
+        Log.d("22",this.getCachedImagesDataWithTags().toString());
         if(result != null) {
             if(horizontalImages.size() > 0) {
                 horizontalImages.clear();
@@ -84,10 +80,12 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
             horizontalImages.addAll(result);
             horizontalImagesAdapter.notifyDataSetChanged();
         }
+        Log.d("33",this.getCachedImagesDataWithTags().toString());
     }
 
     public void displayCachedTagsInsideImage(ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
         Dictionary<String,ImageTagsCache> d = this.getCachedImagesDataWithTags();
+        Log.d("55",this.getCachedImagesDataWithTags().toString());
         if(d != null) {
             if(d.get(currentHolderImagePath) != null) {
                 ImageTagsCache foo = this.getCachedImageTags(currentHolderImagePath);
@@ -101,15 +99,17 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                 }
             }
         }
+        Log.d("44",this.getCachedImagesDataWithTags().toString());
     }
 
     private ImageTagsCache getCurrentImageTags(String path) {
+        Log.d("a",this.getCachedImagesDataWithTags().toString());
         ImageTagsCache foo =this.getCachedImageTags(path);
         return foo;
     }
 
     private void updateCurrentImageTagsCache(String path, ImageTagsCache newData) {
-        Log.d("new data",newData.tagNames.toString());
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
         horizontalImagesWithTags.put(path,newData);
         this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
     }
@@ -141,6 +141,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
 
     private void updateImagesTagCacheData(String imagePath, String text, float x, float y, String url) {
         ImageTagsCache foo;
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
         if(horizontalImagesWithTags.get(imagePath) != null) {
             foo = this.getCachedImageTags(imagePath);
             foo.tagNames.add(text);
@@ -163,6 +164,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     }
 
     private void updateImagesTagCacheDataAfterDrag(String imagePath, float x, float y, String text) {
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
         if(horizontalImagesWithTags.get(imagePath) != null) {
             ImageTagsCache foo = this.getCachedImageTags(imagePath);
             for(int i=0; i<foo.tagNames.size(); i++) {
@@ -178,10 +180,9 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     }
 
     private void deleteImagesTagCacheData(String imagePath, String text) {
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
         ImageTagsCache imageTagsCache = this.getCachedImageTags(imagePath);
         if(imageTagsCache != null) {
-            Log.d("delete",imageTagsCache.tagNames.toString());
-            Log.d("delete",text);
             for(int i=0; i<imageTagsCache.tagNames.size(); i++) {
                 if(imageTagsCache.tagNames.get(i).equals(text) ) {
                     imageTagsCache.tagNames.remove(i);
@@ -190,6 +191,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                     break;
                 }
             }
+            horizontalImagesWithTags.put(imagePath,imageTagsCache);
             this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
         }
     }
@@ -212,6 +214,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
             case nextStepButtonId:
                 finalUpdateImagesTagCacheData();
                 goToStoryOfPostUgc();
+                break;
+            default: break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -220,6 +224,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.horizontal_images_screen);
+        horizontalImages  = new ArrayList<String>();
+        horizontalImagesWithTags = new Hashtable<String, ImageTagsCache>();
         showNavigationBar();
         layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         horizontalImagesScreenRecycleView = (RecyclerView) findViewById(R.id.horizontalSlidingImages);
@@ -521,7 +527,6 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     }
 
     public void cutTheImage(int realImageWidth, int realImageHeight, File imageFile, final ImageView imageview, final int position, final RelativeLayout slidingImagesRoot) {
-
         final float recycleViewWidthToHeightRatio = horizontalImagesScreenRecycleView.getWidth() / horizontalImagesScreenRecycleView.getHeight();
         final float realImageWidthToHeightRatio = realImageWidth / realImageHeight;
 

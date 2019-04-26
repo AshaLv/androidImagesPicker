@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -36,7 +37,7 @@ public class MultiImageSelectorActivity extends SharedPreferenceHelper implement
     // Default image size
     private static final int DEFAULT_IMAGE_SIZE = 9;
 
-    private ArrayList<String> resultList = new ArrayList<>();
+    private ArrayList<String> resultList;
     private Button mSubmitButton;
     private int mDefaultCount = DEFAULT_IMAGE_SIZE;
 
@@ -53,7 +54,7 @@ public class MultiImageSelectorActivity extends SharedPreferenceHelper implement
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        resultList = new ArrayList<>();
         setTheme(R.style.MIS_NO_ACTIONBAR);
         setContentView(R.layout.multi_photo_screen);
 
