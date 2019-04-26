@@ -90,7 +90,6 @@ public class AddProductActivity extends BaseActivity implements ProductInteracto
             TextView title = new TextView(AddProductActivity.this);
             title.setText("最近订单");
             title.setTextColor(Color.BLACK);
-            title.setBackgroundColor(Color.RED);
             title.setLayoutParams(params);
             Log.d("111",String.valueOf(SizeConstant.hugeSize()));
             title.setTextSize(SizeConstant.hugeSize());
@@ -126,6 +125,11 @@ public class AddProductActivity extends BaseActivity implements ProductInteracto
 
         public TextView makeProductNameVIew(Context context) {
             RelativeLayout.LayoutParams params = new RelativeLayoutParamsFac().createDoubleContent();
+            params.addRule(
+                RelativeLayout.RIGHT_OF,
+                PRODUCT_IMAGE_ID
+            );
+            params.leftMargin = (int)(SizeConstant.getDensity() * 20);
             TextView textView = new TextView(context);
             textView.setId(PRODUCT_NAME_ID);
             textView.setLayoutParams(params);
@@ -134,6 +138,15 @@ public class AddProductActivity extends BaseActivity implements ProductInteracto
 
         public TextView makeProductPriceView(Context context) {
             RelativeLayout.LayoutParams params = new RelativeLayoutParamsFac().createDoubleContent();
+            params.addRule(
+                    RelativeLayout.ALIGN_LEFT,
+                    PRODUCT_NAME_ID
+            );
+            params.addRule(
+                    RelativeLayout.BELOW,
+                    PRODUCT_NAME_ID
+            );
+            params.topMargin = (int) (2*SizeConstant.getDensity());
             TextView textView = new TextView(context);
             textView.setId(PRODUCT_PRICE_ID);
             textView.setLayoutParams(params);

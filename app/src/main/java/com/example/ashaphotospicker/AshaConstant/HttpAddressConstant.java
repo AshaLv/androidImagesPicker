@@ -5,4 +5,8 @@ public class HttpAddressConstant {
     static public String getOrderRelatedProductsAddress() {
         return "random";
     }
+    //拿到平台上的品牌
+    static public String getBrandsAddress() {
+        return "random";
+    }
 }
