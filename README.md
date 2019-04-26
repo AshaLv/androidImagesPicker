@@ -11,6 +11,10 @@ Use Case:
 	5 click any tag and you can change the tag text
 	5 对现存的tag进行点击，你可以修改该标签的文字
 
+AshaLib:
+	1 you can follow you designer pixel to design, watch the SizeConstant file under AshaConstant folder
+	1 设计师设计的时候用像素，在这里我也写了仅仅几行代码，在SizeConstant中，通过它，无论设计师用的是多宽的手机，你都能够照着他们的参数设计
+
 Plus：
 	I will keep on updating this project, if it helps you, I am happy.
 	If you wanna share something or have questions, you can add my Wechat account
