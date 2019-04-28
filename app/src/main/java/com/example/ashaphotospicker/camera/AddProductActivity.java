@@ -221,6 +221,7 @@ public class AddProductActivity extends BaseActivity implements ProductInteracto
             backIntent.putExtra(Product.PRODUCT_NAME,product.getProductName());
             backIntent.putExtra(Product.PRODUCT_ID,product.getProductId());
             backIntent.putExtra(Product.PRODUCT_IMAGE,product.getProductImage());
+            backIntent.putExtra(Product.PRODUCT_PRICE,String.valueOf(product.getProductPrice()));
             backIntent.putExtra(Product.BRAND_NAME,product.getBrandName());
             backIntent.putExtra(Product.BRAND_ID,product.getBrandId());
             setResult(Activity.RESULT_OK,backIntent);

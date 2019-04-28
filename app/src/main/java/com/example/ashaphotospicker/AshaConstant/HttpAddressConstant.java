@@ -5,8 +5,12 @@ public class HttpAddressConstant {
     static public String getOrderRelatedProductsAddress() {
         return "random";
     }
-    //拿到平台上的品牌
+    //拿到平台上的品牌地址
     static public String getBrandsAddress() {
+        return "random";
+    }
+    //拿到该用户加入的圈子地址
+    static public String getUserRelatedCirclesAddress() {
         return "random";
     }
 }

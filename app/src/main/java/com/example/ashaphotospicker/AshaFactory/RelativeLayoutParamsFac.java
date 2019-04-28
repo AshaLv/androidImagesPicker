@@ -4,8 +4,17 @@ import android.widget.RelativeLayout;
 
 public class RelativeLayoutParamsFac {
 
+    static public RelativeLayoutParamsFac relativeLayoutParamsFac;
+
     public RelativeLayoutParamsFac() {
 
+    }
+
+    static public RelativeLayoutParamsFac getSingleton() {
+        if(relativeLayoutParamsFac == null) {
+            relativeLayoutParamsFac = new RelativeLayoutParamsFac();
+        }
+        return relativeLayoutParamsFac;
     }
 
     public RelativeLayout.LayoutParams createDoubleParent() {

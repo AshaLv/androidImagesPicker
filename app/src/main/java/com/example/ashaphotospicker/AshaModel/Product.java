@@ -5,6 +5,7 @@ public class Product {
     public static String PRODUCT_ID = "productId";
     public static String PRODUCT_NAME = "productName";
     public static String PRODUCT_IMAGE = "productUrl";
+    public static String PRODUCT_PRICE = "productPrice";
     public static String BRAND_ID = "brandId";
     public static String BRAND_NAME = "brandName";
 
@@ -15,6 +16,8 @@ public class Product {
     private String brandName;
     private String brandId;
 
+    private String productStringPrice;
+
     public Product(String productId, String productImage, String productName, Float productPrice, String brandName, String brandId) {
         this.productId = productId;
         this.productImage = productImage;
@@ -22,6 +25,12 @@ public class Product {
         this.productPrice = productPrice;
         this.brandName = brandName;
         this.brandId = brandId;
+    }
+
+    public Product(String productImage, String productName, String productStringPrice) {
+        this.productImage = productImage;
+        this.productName = productName;
+        this.productStringPrice = productStringPrice;
     }
 
     public String getProductId() {

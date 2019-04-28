@@ -14,19 +14,24 @@ public class SizeConstant {
 
     static private final int DesignScrennWidth = 750;
 
-    static private DisplayMetrics metrics = null;
+    static private DisplayMetrics metrics;
     static private float density;
     static private float sp;
+    static private float widthPixels;
 
     static public void getSingletonMetrics(Context context) {
         if(metrics == null) {
             metrics = context.getResources().getDisplayMetrics();
-            float widthPixels = Resources.getSystem().getDisplayMetrics().widthPixels;
+            widthPixels = Resources.getSystem().getDisplayMetrics().widthPixels;
             float dpProportion = widthPixels / (DesignScrennWidth*(metrics.density));
             float spProportion = widthPixels / (DesignScrennWidth*(metrics.density)*(TypedValue.COMPLEX_UNIT_SP));
             sp = (TypedValue.COMPLEX_UNIT_SP * spProportion);
             density = (metrics.density * dpProportion);
         }
+    }
+
+    public static float getWidthPixels() {
+        return widthPixels;
     }
 
     public static float getDensity() {
@@ -37,18 +42,26 @@ public class SizeConstant {
         return sp;
     }
 
+    public static int getPixel(int pixel) {
+        return (int) (pixel * density);
+    }
+
+    public static float getSpPixel(int pixel) {
+        return pixel * sp;
+    }
+
     //关于字体大小的
     static public float extremeSmallSize() {
-        return 8;
+        return 8*sp;
     }
     static public float smallSize() {
-        return 14;
+        return 14*sp;
     }
     static public float mediumSize() {
-        return 16;
+        return 16*sp;
     }
     static public float bigSize() {
-        return 24;
+        return 24*sp;
     }
     static public float hugeSize() {
         return 34*sp;
@@ -58,7 +71,7 @@ public class SizeConstant {
         return 8;
     }
     static public int smallImageSize() {
-        return (int)(120*density);
+        return getPixel(120);
     }
     static public int mediumImageSize() {
         return 16;
@@ -71,10 +84,10 @@ public class SizeConstant {
     }
     //关于距离的
     static public int extremeSmallDistance() {
-        return (int)(24*density);
+        return getPixel(24);
     }
     static public int smallDistance() {
-        return (int)(32*density);
+        return getPixel(32);
     }
     static public int mediumDistance() {
         return 16;

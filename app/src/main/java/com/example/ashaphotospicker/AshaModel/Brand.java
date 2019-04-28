@@ -17,6 +17,11 @@ public class Brand {
         this.brandDesc = brandDesc;
     }
 
+    public Brand(String brandId, String brandName) {
+        this.brandId = brandId;
+        this.brandName = brandName;
+    }
+
     public String getBrandName() {
         return brandName;
     }

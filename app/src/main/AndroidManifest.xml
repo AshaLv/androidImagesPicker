@@ -31,6 +31,8 @@
         <activity android:name=".camera.AddBrandNameActivity"/>
 
         <activity android:name=".camera.AddProductActivity" />
+
+        <activity android:name=".camera.PostUGCActivity" />
     </application>
 
 </manifest>

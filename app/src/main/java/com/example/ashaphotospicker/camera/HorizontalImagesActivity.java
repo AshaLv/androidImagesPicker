@@ -6,6 +6,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -27,18 +28,21 @@ import android.widget.TextView;
 import android.support.v7.widget.RecyclerView;
 import com.example.ashaphotospicker.AshaFactory.LinearLayoutParamsFac;
 import com.example.ashaphotospicker.AshaFactory.RelativeLayoutParamsFac;
+import com.example.ashaphotospicker.AshaHelper.BitmapHelper;
 import com.example.ashaphotospicker.AshaHelper.SharedPreferenceHelper;
 import com.example.ashaphotospicker.R;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import com.example.ashaphotospicker.camera.adapter.HorizontalImagesAdapter;
 import com.example.ashaphotospicker.camera.bean.ImageTagsCache;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
-public class HorizontalImagesActivity extends SharedPreferenceHelper {
+public class HorizontalImagesActivity extends SharedPreferenceHelper implements BitmapHelper.DoneGetUrlActivity {
     private static final String TAG = "HorizontalImages";
 
     private RecyclerView horizontalImagesScreenRecycleView;
@@ -70,22 +74,30 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     private TextView currentBeingModifiedExistedTag;
     private String oldBrandResultText;
 
+    private ArrayList<Float> imagesSize;
+
+    private ArrayList<String> finalImagesNeedToUploadToServerQueue;
+
     private void initImages() {
         ArrayList result = this.getCachedImagesPath();
-        Log.d("22",this.getCachedImagesDataWithTags().toString());
         if(result != null) {
             if(horizontalImages.size() > 0) {
                 horizontalImages.clear();
             }
             horizontalImages.addAll(result);
             horizontalImagesAdapter.notifyDataSetChanged();
+            horizontalImagesWithTags = this.getCachedImagesDataWithTags();
+            for(int i=0; i<result.size(); i++) {
+                if(horizontalImagesWithTags.get(result.get(i)) == null) {
+                    horizontalImagesWithTags.put((String)result.get(i),new ImageTagsCache());
+                }
+            }
+            this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
         }
-        Log.d("33",this.getCachedImagesDataWithTags().toString());
     }
 
     public void displayCachedTagsInsideImage(ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
         Dictionary<String,ImageTagsCache> d = this.getCachedImagesDataWithTags();
-        Log.d("55",this.getCachedImagesDataWithTags().toString());
         if(d != null) {
             if(d.get(currentHolderImagePath) != null) {
                 ImageTagsCache foo = this.getCachedImageTags(currentHolderImagePath);
@@ -99,11 +111,9 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                 }
             }
         }
-        Log.d("44",this.getCachedImagesDataWithTags().toString());
     }
 
     private ImageTagsCache getCurrentImageTags(String path) {
-        Log.d("a",this.getCachedImagesDataWithTags().toString());
         ImageTagsCache foo =this.getCachedImageTags(path);
         return foo;
     }
@@ -197,11 +207,59 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     }
 
     private void finalUpdateImagesTagCacheData() {
-        Log.d("final","let us do the final");
+        ArrayList<String> paths = this.getCachedImagesPath();
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
+
+        Enumeration existedPaths = horizontalImagesWithTags.keys();
+        while (existedPaths.hasMoreElements()) {
+            String element =  (String) existedPaths.nextElement();
+            // process element
+            if(!paths.contains(element)) {
+                horizontalImagesWithTags.remove(element);
+            }
+        }
+        this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
+        Log.d("final",horizontalImagesWithTags.toString());
+        Log.d("final",imagesSize.toString());
     }
 
     private void goToStoryOfPostUgc() {
-        Log.d("go to post ugc","let us go to post ugc");
+        finalImagesNeedToUploadToServerQueue = new ArrayList<>();
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
+        for(int j=0; j<horizontalImages.size(); j++) {
+            ImageTagsCache imageTagsCache = this.getCachedImageTags(horizontalImages.get(j));
+            if(imageTagsCache.url == "") {
+                finalImagesNeedToUploadToServerQueue.add(horizontalImages.get(j));
+            }else {
+
+            }
+            if(imagesSize.size()-1 >= j ) {
+                imageTagsCache.ratio = imagesSize.get(j);
+            } else {
+                imageTagsCache.ratio = 404;
+                //随便填一个数字说明用户加了图片之后连看一眼图片都没有看
+            }
+            horizontalImagesWithTags.remove(horizontalImages.get(j));
+            horizontalImagesWithTags.put(horizontalImages.get(j),imageTagsCache);
+        }
+        this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
+        BitmapHelper.activity = HorizontalImagesActivity.this;
+        BitmapHelper.uploadToServerAndGetTheUrl(finalImagesNeedToUploadToServerQueue);
+
+    }
+
+    public void doneGetUrl() {
+        Intent intent = new Intent(HorizontalImagesActivity.this,PostUGCActivity.class);
+        startActivity(intent);
+    }
+
+    public void didGetTheImageUrlFromServer(ArrayList<String> urlQueue,ArrayList<String> finalImagesNeedToUploadToServerQueue) {
+        horizontalImagesWithTags = this.getCachedImagesDataWithTags();
+        for(int i=0; i<finalImagesNeedToUploadToServerQueue.size(); i++) {
+            ImageTagsCache foo = horizontalImagesWithTags.get(finalImagesNeedToUploadToServerQueue.get(i));
+            foo.url = urlQueue.get(i);
+        }
+        this.saveCachedImagesDataWithTags(horizontalImagesWithTags);
     }
 
     @Override
@@ -212,6 +270,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                 finish();
                 return true;
             case nextStepButtonId:
+                Log.d("go to post ugc","76858464564645");
                 finalUpdateImagesTagCacheData();
                 goToStoryOfPostUgc();
                 break;
@@ -223,6 +282,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        imagesSize = new ArrayList<>();
         setContentView(R.layout.horizontal_images_screen);
         horizontalImages  = new ArrayList<String>();
         horizontalImagesWithTags = new Hashtable<String, ImageTagsCache>();
@@ -235,27 +295,6 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
         horizontalImagesScreenRecycleView.setAdapter(horizontalImagesAdapter);
         initImages();
         new PagerSnapHelper().attachToRecyclerView(horizontalImagesScreenRecycleView);
-
-
-        //临时弄一个清缓存的
-        TextView p = findViewById(R.id.promptOfAddingTagAndProductName);
-        p.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG,gson.toJson(getCurrentImageTags(currentHolderImagePath)));
-            }
-        });
-        p.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Log.d(TAG,currentHolderImagePath);
-                ImageTagsCache h = new ImageTagsCache("",new ArrayList<String>(),new ArrayList<Float>());
-                updateCurrentImageTagsCache(currentHolderImagePath,h);
-                return true;
-            }
-        });
-
-
     }
 
     public void recordPoint(float x, float y, ImageView currentHolderImageView, String currentHolderImagePath, RelativeLayout slidingImageRoot) {
@@ -445,7 +484,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                     String productId = data.getStringExtra("productId");
                     String brandName = data.getStringExtra("brandName");
                     String brandId = data.getStringExtra("brandId");
-                    setProductResultText(productName,productUrl,productId);
+                    String productPrice = data.getStringExtra("productPrice");
+                    setProductResultText(productName,productUrl,productId,productPrice);
                     setBrandResultText(brandName,brandId);
                 }
                 break;
@@ -555,6 +595,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                 .error(R.mipmap.ic_launcher) //if error
                 .into(imageview);
 
+        imagesSize.add((float)usedWidth/usedHeight);
+
         imageview.setOnTouchListener(new View.OnTouchListener() {
             float x2 = 0;
             float y2 = 0;
@@ -576,9 +618,9 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
 
     }
 
-    public void setProductResultText(String productName, String productUrl, String productId) {
+    public void setProductResultText(String productName, String productUrl, String productId, String productPrice) {
         if(!productName.equals("noProductName")) productResult.setText(productName);
-        productResult.setTag(";ashaSeperator;" + productName + ":" + productUrl + ":" + productId);
+        productResult.setTag(";ashaSeperator;" + productName + ":" + productUrl + ":" + productId + ":" + productPrice);
     }
 
     public void setBrandResultText(String brandName, String brandId) {
@@ -588,7 +630,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                 brandResult.setTag(brandName+productResult.getTag()+":"+brandId);
             }else{
                 //当商品没有选的时候，数据就是长这样的
-                brandResult.setTag(brandName+";ashaSeperator;noProductName:noProductUrl:noProductId:"+brandId);
+                brandResult.setTag(brandName+";ashaSeperator;noProductName:noProductUrl:noProductId:"+brandId+"noProductPrice");
             }
 
         }
@@ -605,12 +647,12 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
         if(brandResultText != "") {
             final RelativeLayout relativeLayout = new RelativeLayout(this);
             RelativeLayout.LayoutParams params1 = new RelativeLayoutParamsFac().createDoubleContent();
-            if(currentHolderImageView.getWidth() - x < 300) {
-                x = x - 300;
-            }
-            if(currentHolderImageView.getHeight() - y < 300) {
-                y = y - 300;
-            }
+//            if(currentHolderImageView.getWidth() - x < 300) {
+//                x = x - 300;
+//            }
+//            if(currentHolderImageView.getHeight() - y < 300) {
+//                y = y - 300;
+//            }
             params1.leftMargin = (int) x;
             params1.topMargin = (int) y;
             relativeLayout.setLayoutParams(params1);
@@ -635,6 +677,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
             );
             params1.leftMargin = 4;
             deleteText1.setLayoutParams(params1);
+            deleteText1.setTag(currentHolderImagePath);
 
             //为"删除"TextView加点击事件，删除"标签"和"删除"这两个TextView
             deleteText1.setOnClickListener(new View.OnClickListener() {
@@ -643,7 +686,7 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                     //加监听的时候不能直接用上面的数据,不知道为什么,就先调取parent吧
                     RelativeLayout relativeLayout = (RelativeLayout) v.getParent();
                     RelativeLayout slidingImageRoot = (RelativeLayout) relativeLayout.getParent();
-                    deleteImagesTagCacheData(currentHolderImagePath,brandResultText);
+                    deleteImagesTagCacheData((String)v.getTag(),brandResultText);
                     slidingImageRoot.removeView(relativeLayout);
                 }
             });
@@ -692,7 +735,8 @@ public class HorizontalImagesActivity extends SharedPreferenceHelper {
                                 String productUrl = productInfoWrappers[1];
                                 String productId = productInfoWrappers[2];
                                 String brandId = productInfoWrappers[3];
-                                setProductResultText(productName,productUrl,productId);
+                                String productPrice = productInfoWrappers[4];
+                                setProductResultText(productName,productUrl,productId,productPrice);
                                 setBrandResultText(brandName,brandId);
                             default: break;
                         }

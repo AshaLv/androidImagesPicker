@@ -1,5 +1,7 @@
 package com.example.ashaphotospicker.AshaInteractor;
 
+import android.util.Log;
+
 import com.example.ashaphotospicker.AshaConstant.HttpAddressConstant;
 import com.example.ashaphotospicker.AshaModel.Brand;
 
@@ -16,7 +18,9 @@ public class BrandInteractor {
     public void getBrands() {
         String api = HttpAddressConstant.getBrandsAddress();
         ArrayList<Brand> brands = new ArrayList<>();
-        if(Math.random() > 0.5) {
+        double r = Math.random();
+        Log.d("r",String.valueOf(r));
+        if(r > 0.3) {
             brands.add(new Brand("3242354235252","brandName1","https://file.mengqu.meng2333.com/M5MBYPA8AhQIaMPtprjHO1C.jpg","cool brand I like it"));
             brands.add(new Brand("3242354235252","brandName2","https://file.mengqu.meng2333.com/M5MBYPA8AhQIaMPtprjHO1C.jpg","cool brand I like it"));
             brands.add(new Brand("3242354235252","brandName3","https://file.mengqu.meng2333.com/M5MBYPA8AhQIaMPtprjHO1C.jpg","cool brand I like it"));

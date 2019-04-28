@@ -5,8 +5,17 @@ import android.widget.LinearLayout;
 
 public class LinearLayoutParamsFac  {
 
+    static public LinearLayoutParamsFac linearLayoutParamsFac;
+
     public LinearLayoutParamsFac() {
 
+    }
+
+    static public LinearLayoutParamsFac getSingleton() {
+        if(linearLayoutParamsFac == null) {
+            linearLayoutParamsFac = new LinearLayoutParamsFac();
+        }
+        return linearLayoutParamsFac;
     }
 
     public LinearLayout.LayoutParams createDoubleParent() {
